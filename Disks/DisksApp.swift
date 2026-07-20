@@ -11,7 +11,6 @@ import SwiftUI
 struct DisksApp: App {
   @NSApplicationDelegateAdaptor private var delegate: AppDelegate
   @State private var disks = DisksModel()
-  @State private var isInserted = true
 
   var body: some Scene {
     AppScene()
