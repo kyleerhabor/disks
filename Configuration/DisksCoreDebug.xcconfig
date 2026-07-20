@@ -1,0 +1,13 @@
+//
+//  DisksCoreDebug.xcconfig
+//  Disks
+//
+//  Created by Kyle Erhabor on 7/16/26.
+//
+
+#include "./DisksCore.xcconfig"
+
+DISKS_TARGET_BUNDLE_ID = $(DISKS_ORGANIZATION_ID).DisksDebug
+DISKS_TESTS_TARGET_BUNDLE_ID = $(DISKS_ORGANIZATION_ID).DisksTestsDebug
+DISKS_UI_TESTS_TARGET_BUNDLE_ID = $(DISKS_ORGANIZATION_ID).DisksUITestsDebug
+DISKS_HELPER_TARGET_BUNDLE_ID = $(DISKS_ORGANIZATION_ID).DisksHelperDebug

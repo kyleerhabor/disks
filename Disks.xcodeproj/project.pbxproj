@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0009FAD0300C643000AF09E3 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 0009FACF300C643000AF09E3 /* GRDB */; };
+		00C86EDC300D864A003D6D7B /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 00C86EDB300D864A003D6D7B /* LICENSE */; };
+		00C86EDE300D87E4003D6D7B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 00C86EDD300D87E4003D6D7B /* README.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		000B4922300899E600A0015B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -21,17 +27,58 @@
 			remoteGlobalIDString = 000B4913300899E100A0015B;
 			remoteInfo = Disks;
 		};
+		0043E0DA300A98B7007F2DCB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000B490C300899E100A0015B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 006387573009F87400F2BC79;
+			remoteInfo = DisksHelper;
+		};
+		0043E0DE300A98BF007F2DCB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000B490C300899E100A0015B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 006387573009F87400F2BC79;
+			remoteInfo = DisksHelper;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		0043E0E0300A995C007F2DCB /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/LaunchAgents;
+			dstSubfolderSpec = 1;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		000B4914300899E100A0015B /* Disks.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Disks.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000B4921300899E600A0015B /* DisksTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DisksTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		000B492B300899E600A0015B /* DisksUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DisksUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		00C86EDB300D864A003D6D7B /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		00C86EDD300D87E4003D6D7B /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		006387A6300A063900F2BC79 /* Exceptions for "Disks" folder in "Disks" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 000B4913300899E100A0015B /* Disks */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		000B4916300899E100A0015B /* Disks */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				006387A6300A063900F2BC79 /* Exceptions for "Disks" folder in "Disks" target */,
+			);
 			path = Disks;
 			sourceTree = "<group>";
 		};
@@ -45,6 +92,11 @@
 			path = DisksUITests;
 			sourceTree = "<group>";
 		};
+		000B499C30089A2F00A0015B /* Configuration */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Configuration;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,6 +104,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0009FAD0300C643000AF09E3 /* GRDB in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -75,6 +128,9 @@
 		000B490B300899E100A0015B = {
 			isa = PBXGroup;
 			children = (
+				00C86EDD300D87E4003D6D7B /* README.md */,
+				00C86EDB300D864A003D6D7B /* LICENSE */,
+				000B499C30089A2F00A0015B /* Configuration */,
 				000B4916300899E100A0015B /* Disks */,
 				000B4924300899E600A0015B /* DisksTests */,
 				000B492E300899E600A0015B /* DisksUITests */,
@@ -102,16 +158,21 @@
 				000B4910300899E100A0015B /* Sources */,
 				000B4911300899E100A0015B /* Frameworks */,
 				000B4912300899E100A0015B /* Resources */,
+				0043E0E0300A995C007F2DCB /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				0043E0DB300A98B7007F2DCB /* PBXTargetDependency */,
+				0043E0DF300A98BF007F2DCB /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				000B4916300899E100A0015B /* Disks */,
+				000B499C30089A2F00A0015B /* Configuration */,
 			);
 			name = Disks;
 			packageProductDependencies = (
+				0009FACF300C643000AF09E3 /* GRDB */,
 			);
 			productName = Disks;
 			productReference = 000B4914300899E100A0015B /* Disks.app */;
@@ -195,6 +256,9 @@
 			);
 			mainGroup = 000B490B300899E100A0015B;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0009FA67300C625F00AF09E3 /* XCRemoteSwiftPackageReference "GRDB.swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 000B4915300899E100A0015B /* Products */;
 			projectDirPath = "";
@@ -212,6 +276,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				00C86EDC300D864A003D6D7B /* LICENSE in Resources */,
+				00C86EDE300D87E4003D6D7B /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -265,6 +331,14 @@
 			isa = PBXTargetDependency;
 			target = 000B4913300899E100A0015B /* Disks */;
 			targetProxy = 000B492C300899E600A0015B /* PBXContainerItemProxy */;
+		};
+		0043E0DB300A98B7007F2DCB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			targetProxy = 0043E0DA300A98B7007F2DCB /* PBXContainerItemProxy */;
+		};
+		0043E0DF300A98BF007F2DCB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			targetProxy = 0043E0DE300A98BF007F2DCB /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -327,9 +401,15 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(DISKS_BUNDLE_ID)";
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_EXISTENTIAL_ANY = YES;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -384,77 +464,89 @@
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(DISKS_BUNDLE_ID)";
 				SDKROOT = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_EXISTENTIAL_ANY = YES;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
 		000B4936300899E600A0015B /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 000B4916300899E100A0015B /* Disks */;
+			baseConfigurationReferenceRelativePath = Configuration/DisksDebug.xcconfig;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Disks/Disks.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = UYJ357XWK6;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Disks/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kyleerhabor.Disks;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
 		000B4937300899E600A0015B /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 000B4916300899E100A0015B /* Disks */;
+			baseConfigurationReferenceRelativePath = Configuration/DisksRelease.xcconfig;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Disks/Disks.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = UYJ357XWK6;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Disks/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kyleerhabor.Disks;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
 		000B4939300899E600A0015B /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 000B4924300899E600A0015B /* DisksTests */;
+			baseConfigurationReferenceRelativePath = Configuration/DisksTestsDebug.xcconfig;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -463,19 +555,18 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kyleerhabor.DisksTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Disks.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Disks";
 			};
 			name = Debug;
 		};
 		000B493A300899E600A0015B /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 000B4924300899E600A0015B /* DisksTests */;
+			baseConfigurationReferenceRelativePath = Configuration/DisksTestsRelease.xcconfig;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -484,51 +575,46 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kyleerhabor.DisksTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Disks.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Disks";
 			};
 			name = Release;
 		};
 		000B493C300899E600A0015B /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 000B492E300899E600A0015B /* DisksUITests */;
+			baseConfigurationReferenceRelativePath = Configuration/DisksUITestsDebug.xcconfig;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = UYJ357XWK6;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kyleerhabor.DisksUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TEST_TARGET_NAME = Disks;
 			};
 			name = Debug;
 		};
 		000B493D300899E600A0015B /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 000B492E300899E600A0015B /* DisksUITests */;
+			baseConfigurationReferenceRelativePath = Configuration/DisksUITestsRelease.xcconfig;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = UYJ357XWK6;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kyleerhabor.DisksUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 				TEST_TARGET_NAME = Disks;
 			};
 			name = Release;
@@ -573,6 +659,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0009FA67300C625F00AF09E3 /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.11.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0009FACF300C643000AF09E3 /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0009FA67300C625F00AF09E3 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			productName = GRDB;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 000B490C300899E100A0015B /* Project object */;
 }

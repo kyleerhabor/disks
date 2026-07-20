@@ -1,0 +1,10 @@
+//
+//  DisksRelease.xcconfig
+//  Disks
+//
+//  Created by Kyle Erhabor on 7/17/26.
+//
+
+#include "../../Configuration/DisksCoreRelease.xcconfig"
+
+DISKS_BUNDLE_ID = $(DISKS_TARGET_BUNDLE_ID)

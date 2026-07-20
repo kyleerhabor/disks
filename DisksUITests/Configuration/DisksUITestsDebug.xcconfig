@@ -1,0 +1,10 @@
+//
+//  DisksUITestsDebug.xcconfig
+//  DisksUITests
+//
+//  Created by Kyle Erhabor on 7/17/26.
+//
+
+#include "../../Configuration/DisksCoreDebug.xcconfig"
+
+DISKS_BUNDLE_ID = $(DISKS_UI_TESTS_TARGET_BUNDLE_ID)

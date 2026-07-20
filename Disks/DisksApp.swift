@@ -9,9 +9,16 @@ import SwiftUI
 
 @main
 struct DisksApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
-    }
+  @NSApplicationDelegateAdaptor private var delegate: AppDelegate
+  @State private var disks = DisksModel()
+  @State private var isInserted = true
+
+  var body: some Scene {
+    AppScene()
+      .environment(self.disks)
+  }
+
+  init() {
+    self.delegate.disks = self.disks
+  }
 }
