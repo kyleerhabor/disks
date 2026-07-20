@@ -52,8 +52,6 @@ struct DiskImagePasswordScene: Scene {
             // We can technically parse stderr since it's stable, but I can't be asked.
             Logger.ui.error("Could not store disk image at URL '\(image.url)': \(error)")
 
-            disks.isUnlockFailedScenePresented = true
-
             return
           }
         }

@@ -55,8 +55,6 @@ struct DiskPasswordScene: Scene {
           } catch {
             Logger.ui.error("Could not store disk: \(error)")
 
-            disks.isUnlockFailedScenePresented = true
-
             return
           }
         }
