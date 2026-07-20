@@ -83,9 +83,8 @@ extension DisksModel {
       kSecClass: kSecClassGenericPassword,
       kSecAttrService: Self.diskImagePasswordService,
       kSecAttrAccount: account,
-      kSecUseAuthenticationContext: context,
-      kSecUseDataProtectionKeychain: true,
       kSecReturnData: true,
+      kSecUseAuthenticationContext: context,
     ]
 
     var result: CFTypeRef!

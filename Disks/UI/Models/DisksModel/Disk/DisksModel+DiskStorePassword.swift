@@ -59,28 +59,14 @@ extension DisksModel {
       throw DisksModelDiskStorePasswordError(code: .database(error))
     }
 
-    var error: Unmanaged<CFError>?
-    let secAccessControl = SecAccessControlCreateWithFlags(
-      nil,
-      kSecAttrAccessibleWhenUnlocked,
-      .userPresence,
-      &error,
-    )
-
-    if let error {
-      throw DisksModelDiskStorePasswordError(code: .keychain(error.takeRetainedValue()))
-    }
-
-    let accessControl = secAccessControl!
     let account = disk.id!.uuidString
     let value = password.data(using: .utf8)!
     let addQuery: [CFString: Any] = [
       kSecClass: kSecClassGenericPassword,
       kSecAttrService: Self.diskPasswordService,
       kSecAttrAccount: account,
+      kSecAttrAccessible: kSecAttrAccessibleWhenUnlocked,
       kSecValueData: value,
-      kSecUseDataProtectionKeychain: true,
-      kSecAttrAccessControl: accessControl,
     ]
 
     let updateQuery: [CFString: Any] = [
@@ -88,7 +74,6 @@ extension DisksModel {
       kSecAttrService: Self.diskPasswordService,
       kSecAttrAccount: account,
       kSecMatchLimit: kSecMatchLimitOne,
-      kSecUseDataProtectionKeychain: true,
     ]
 
     let updateAttributes: [CFString: Any] = [
