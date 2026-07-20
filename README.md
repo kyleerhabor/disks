@@ -1,6 +1,6 @@
 # Disks
 
-A Mac app for unlocking your drives with Touch ID.
+A Mac menu bar app for unlocking your drives with Touch ID.
 
 ## Download
 
