@@ -30,6 +30,6 @@ Enter Disks, a menu bar app for unlocking your drives with Touch ID.
 >
 > Disks has not been notarized by Apple. To run the app, open it and [follow these instructions](https://support.apple.com/en-us/102445#openanyway).
 
-You can download a release from the [Releases](https://github.com/kyleerhabor/disks/releases) page.
+You can download the app from the [Releases](https://github.com/kyleerhabor/disks/releases) page.
 
 macOS Sequoia 15 or later is required.
