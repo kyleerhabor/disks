@@ -33,8 +33,6 @@ enum DisksModelDiskLoadPasswordErrorCode {
        badKeychainData(DisksModelDiskLoadPasswordBadKeychainDataError)
 }
 
-extension DisksModelDiskLoadPasswordErrorCode: Error {}
-
 struct DisksModelDiskLoadPasswordError {
   let code: DisksModelDiskLoadPasswordErrorCode
 }

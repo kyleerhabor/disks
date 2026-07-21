@@ -26,8 +26,6 @@ enum DisksModelAttachErrorCode {
        badOutput(DisksModelAttachBadOutputError)
 }
 
-extension DisksModelAttachErrorCode: Error {}
-
 struct DisksModelAttachError {
   let code: DisksModelAttachErrorCode
 }

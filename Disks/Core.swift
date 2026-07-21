@@ -32,6 +32,11 @@ extension URL {
 
 // MARK: - Swift Concurrency
 
+typealias AsyncStreamContinuationPair<Element> = (
+  stream: AsyncStream<Element>,
+  continuation: AsyncStream<Element>.Continuation,
+)
+
 // In some settings, calling a synchronous function from an asynchronous one can block the underlying cooperative thread,
 // deadlocking the system when all cooperative threads are blocked (e.g., calling URL/bookmarkData(options:includingResourceValuesForKeys:relativeTo:)
 // from a task group). I presume this is caused by a function:

@@ -20,8 +20,6 @@ enum DisksModelImageStorePasswordErrorCode {
        keychain(any Error)
 }
 
-extension DisksModelImageStorePasswordErrorCode: Error {}
-
 struct DisksModelImageStorePasswordError {
   let code: DisksModelImageStorePasswordErrorCode
 }

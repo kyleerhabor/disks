@@ -21,8 +21,6 @@ enum DisksModelMountErrorCode {
        mountFailed(DisksModelMountFailedError)
 }
 
-extension DisksModelMountErrorCode: Error {}
-
 struct DisksModelMountError {
   let device: String
   let code: DisksModelMountErrorCode

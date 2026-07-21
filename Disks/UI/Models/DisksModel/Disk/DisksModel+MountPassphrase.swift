@@ -29,8 +29,6 @@ enum DisksModelMountPassphraseErrorCode {
        notSuccessful
 }
 
-extension DisksModelMountPassphraseErrorCode: Error {}
-
 private struct DisksModelMountPassphraseOutput {
   let success: Bool
 }

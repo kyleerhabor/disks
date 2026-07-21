@@ -9,7 +9,24 @@ import DiskArbitration
 import Foundation
 import IOKit.kext
 import Observation
+import OSLog
 import SwiftUI
+
+private func device(disk: DADisk) -> String? {
+  // This is nil on {id = /System/Volumes/Data/home?owner=0}
+  guard let bsdName = DADiskGetBSDName(disk) else {
+    return nil
+  }
+
+  let name = String(cString: bsdName)
+
+  return name
+}
+
+
+extension UUID {
+  static let efiPartition = Self(uuidString: "C12A7328-F81F-11D2-BA4B-00A0C93EC93B")!
+}
 
 struct DiskSession {
   let session: DASession
@@ -71,19 +88,36 @@ struct DiskUnmountApprovalAction {
   }
 }
 
+enum DiskModelKind {
+  
+}
 
 @Observable
 final class DiskModel {
   @ObservationIgnored let uuid: UUID
   @ObservationIgnored fileprivate(set) var device: String
+  @ObservationIgnored fileprivate(set) var wholeDevice: String
+  @ObservationIgnored fileprivate(set) var isFromDiskImage: Bool
   fileprivate(set) var name: String
   fileprivate(set) var icon: Image
+  fileprivate(set) var isMounted: Bool
 
-  init(uuid: UUID, device: String, name: String, icon: Image) {
+  init(
+    uuid: UUID,
+    device: String,
+    wholeDevice: String,
+    isFromDiskImage: Bool,
+    name: String,
+    icon: Image,
+    isMounted: Bool,
+  ) {
     self.uuid = uuid
     self.device = device
+    self.wholeDevice = wholeDevice
+    self.isFromDiskImage = isFromDiskImage
     self.name = name
     self.icon = icon
+    self.isMounted = isMounted
   }
 }
 
@@ -93,6 +127,7 @@ private struct DisksModelDisk {
   let id: UUID
   let name: String
   let icon: Image
+  let isMounted: Bool
 }
 
 @Observable
@@ -107,6 +142,12 @@ class DiskImageModel {
     self.name = name
     self.url = url
   }
+}
+
+private enum DisksModelEvent {
+  case appeared(String)
+  case disappeared(String)
+  case descriptionChanged(String)
 }
 
 private struct DisksModelProcessNoDataError: Error {}
@@ -138,7 +179,8 @@ final class DisksModel {
   @ObservationIgnored private(set) var descriptionChangedAction: DiskDescriptionChangedAction?
   @ObservationIgnored private(set) var mountApprovalAction: DiskMountApprovalAction?
   @ObservationIgnored private(set) var unmountApprovalAction: DiskUnmountApprovalAction?
-
+  @ObservationIgnored private var sessionContinuation: AsyncStream<DisksModelEvent>.Continuation?
+  @ObservationIgnored private var sessionTask: Task<Void, Never>?
 
   func start() {
     guard let s = DASessionCreate(nil) else {
@@ -151,6 +193,25 @@ final class DisksModel {
     )
 
     let session = DiskSession(session: s, queue: queue)
+    let stream = AsyncStream<DisksModelEvent>.makeStream()
+    self.sessionContinuation = stream.continuation
+    self.sessionTask = Task { [weak self] in
+      guard let self else {
+        return
+      }
+
+      for await event in stream.stream {
+        switch event {
+          case let .appeared(device):
+            await self.handleAppear(device: device, session: session.session)
+          case let .disappeared(device):
+            self.handleDisappear(device: device)
+          case let .descriptionChanged(device):
+            await self.handleDescriptionChange(device: device, session: session.session)
+        }
+      }
+    }
+
     let context = Unmanaged.passUnretained(self).toOpaque()
 
     // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0302-concurrent-value-and-concurrent-closures.md
@@ -158,22 +219,37 @@ final class DisksModel {
     //   C function pointers conform to the Sendable protocol. This is safe because they cannot capture values.
 
     let appeared = DiskAppearedAction(context: context) { disk, context in
-      let model = Unmanaged<DisksModel>.fromOpaque(context!).takeUnretainedValue()
-      model.handleAppear(disk)
+      let context = Unmanaged<DisksModel>.fromOpaque(context!).takeUnretainedValue()
+
+      guard let device = device(disk: disk) else {
+        return
+      }
+
+      context.sessionContinuation!.yield(.appeared(device))
     }
 
     DARegisterDiskAppearedCallback(session.session, nil, appeared.callback, appeared.context)
 
     let disappeared = DiskDisappearedAction(context: context) { disk, context in
-      let model = Unmanaged<DisksModel>.fromOpaque(context!).takeUnretainedValue()
-      model.handleDisappear(disk)
+      let context = Unmanaged<DisksModel>.fromOpaque(context!).takeUnretainedValue()
+
+      guard let device = device(disk: disk) else {
+        return
+      }
+
+      context.sessionContinuation!.yield(.disappeared(device))
     }
 
     DARegisterDiskDisappearedCallback(session.session, nil, disappeared.callback, disappeared.context)
 
     let descriptionChanged = DiskDescriptionChangedAction(context: context) { disk, keys, context in
-      let model = Unmanaged<DisksModel>.fromOpaque(context!).takeUnretainedValue()
-      model.handleDescriptionChange(disk, keys: keys)
+      let context = Unmanaged<DisksModel>.fromOpaque(context!).takeUnretainedValue()
+
+      guard let device = device(disk: disk) else {
+        return
+      }
+
+      context.sessionContinuation!.yield(.descriptionChanged(device))
     }
 
     DARegisterDiskDescriptionChangedCallback(
@@ -199,7 +275,6 @@ final class DisksModel {
     self.descriptionChangedAction = descriptionChanged
     self.mountApprovalAction = mountApproval
     self.unmountApprovalAction = unmountApproval
-
   }
 
   func stop() {
@@ -242,7 +317,12 @@ final class DisksModel {
       appeared.context,
     )
 
+    self.sessionContinuation!.finish()
+    self.sessionTask!.cancel()
+
     self.session = nil
+    self.sessionContinuation = nil
+    self.sessionTask = nil
     self.appearedAction = nil
     self.disappearedAction = nil
     self.descriptionChangedAction = nil
@@ -312,8 +392,18 @@ final class DisksModel {
     }
   }
 
-  private func addDisk(name: String, disk: DisksModelDisk) {
-    self.disks.append(DiskModel(uuid: disk.id, device: name, name: disk.name, icon: disk.icon))
+  private func addDisk(device: String, wholeDevice: String, isFromDiskImage: Bool, disk: DisksModelDisk) {
+    self.disks.append(
+      DiskModel(
+        uuid: disk.id,
+        device: device,
+        wholeDevice: wholeDevice,
+        isFromDiskImage: isFromDiskImage,
+        name: disk.name,
+        icon: disk.icon,
+        isMounted: disk.isMounted,
+      ),
+    )
   }
 
   private func removeDisk(device: String) {
@@ -331,53 +421,70 @@ final class DisksModel {
 
     model.name = disk.name
     model.icon = disk.icon
+    model.isMounted = disk.isMounted
   }
 
-  nonisolated private func handleAppear(_ disk: DADisk) {
-    guard let name = self.deviceName(disk: disk),
-          let disk = self.disk(disk: disk) else {
+  nonisolated private func handleAppear(device: String, session: DASession) async {
+    guard let disk = DADiskCreateFromBSDName(nil, session, device) else {
       return
     }
 
-    Task { @MainActor in
-      self.addDisk(name: name, disk: disk)
-    }
-  }
-
-  nonisolated private func handleDisappear(_ disk: DADisk) {
-    guard let name = self.deviceName(disk: disk) else {
+    guard let disk = self.disk(disk: disk) else {
       return
     }
 
-    Task { @MainActor in
-      self.removeDisk(device: name)
-    }
-  }
+    let wholeDevice: String
 
-  nonisolated private func handleDescriptionChange(_ disk: DADisk, keys: CFArray) {
-    guard let name = self.deviceName(disk: disk),
-          let disk = self.disk(disk: disk) else {
+    do {
+      wholeDevice = try await self.wholeDevice(name: device)
+    } catch {
+      Logger.ui.error("\(error)")
+
       return
     }
 
-    Task { @MainActor in
-      self.updateDisk(device: name, disk: disk)
+    let isFromDiskImage: Bool
+
+    do {
+      isFromDiskImage = try await self.isDiskImage(device: wholeDevice)
+    } catch {
+      Logger.ui.error("\(error)")
+
+      return
     }
+
+    await self.addDisk(device: device, wholeDevice: wholeDevice, isFromDiskImage: isFromDiskImage, disk: disk)
   }
 
-  nonisolated private func deviceName(disk: DADisk) -> String? {
-    // This is nil on {id = /System/Volumes/Data/home?owner=0}
-    guard let bsdName = DADiskGetBSDName(disk) else {
-      return nil
+  private func handleDisappear(device: String) {
+    self.removeDisk(device: device)
+  }
+
+  nonisolated private func handleDescriptionChange(device: String, session: DASession) async {
+    guard let disk = DADiskCreateFromBSDName(nil, session, device) else {
+      return
     }
 
-    let name = String(cString: bsdName)
+    guard let disk = self.disk(disk: disk) else {
+      return
+    }
 
-    return name
+    await self.updateDisk(device: device, disk: disk)
   }
 
   nonisolated private func disk(disk: DADisk) -> DisksModelDisk? {
     let description = DADiskCopyDescription(disk) as! [AnyHashable: Any]
+
+    if let isInternal = description[kDADiskDescriptionDeviceInternalKey],
+       isInternal as! Bool {
+      return nil
+    }
+
+    if let content = description[kDADiskDescriptionMediaContentKey],
+       let id = UUID(uuidString: content as! String),
+       id == .efiPartition {
+      return nil
+    }
 
     guard let volumeUUID = description[kDADiskDescriptionVolumeUUIDKey],
           let volumeName = description[kDADiskDescriptionVolumeNameKey] else {
@@ -395,7 +502,8 @@ final class DisksModel {
       return nil
     }
 
-    let disk = DisksModelDisk(id: id, name: name, icon: icon)
+    let isMounted = description[kDADiskDescriptionVolumePathKey] != nil
+    let disk = DisksModelDisk(id: id, name: name, icon: icon, isMounted: isMounted)
 
     return disk
   }

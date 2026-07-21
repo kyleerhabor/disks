@@ -11,8 +11,6 @@ enum DisksModelAttachPassphraseErrorCode {
   case process(any Error)
 }
 
-extension DisksModelAttachPassphraseErrorCode: Error {}
-
 struct DisksModelAttachPassphraseError {
   let code: DisksModelAttachPassphraseErrorCode
 }
