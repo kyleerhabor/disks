@@ -12,7 +12,7 @@ I have a Samsung T7 and WD Blue SN5000 I bought before AI companies exploded the
   <img src="Documentation/Screenshot 2026-07-21 at 5.12.22 PM.png">
 </details>
 
-This is fine, but involves me finding the password in my password manager to paste and unlock, which is tedious when done almost daily. I can ask it to remember my password, but that allows anyone using my device to access the disk by connecting the drive. The same issue applies to encrypted disk images. If I unmount the disk, I’ll need to use an app like Disk Utility to remount it.
+This is fine, but involves me finding the password in my password manager to paste and unlock, which is tedious when done almost daily. I can ask it to remember my password, but that allows anyone using my device to access the disk by connecting the drive. The same issue applies to encrypted [disk images](https://eclecticlight.co/2022/07/11/a-users-guide-to-disk-images). If I unmount the disk, I’ll need to use an app like Disk Utility to remount it.
 
 There are apps like [Semulov](https://github.com/kainjow/Semulov) and [MountMate](https://github.com/homielab/mountmate) which ease the process, but [the former is in maintenance mode](https://github.com/kainjow/Semulov/issues/47), and neither addresses the issue of anyone being able to connect my drive for access, nor supports opening disk images.
 
