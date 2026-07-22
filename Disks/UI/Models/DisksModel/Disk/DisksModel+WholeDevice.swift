@@ -98,6 +98,10 @@ extension DisksModel {
     var volumeToWhole = [String: String]()
 
     for entry in output.entries {
+      guard entry.deviceIdentifier != name else {
+        return name
+      }
+
       for partition in entry.partitions {
         partitionToWhole[partition.deviceIdentifier] = entry.deviceIdentifier
       }

@@ -41,7 +41,7 @@ extension DisksModelDiskLoadPasswordError: Error {}
 
 
 extension DisksModel {
-  func loadPassword(disk: DiskModel) async throws(DisksModelDiskLoadPasswordError) -> String {
+  func loadPassword(disk: DiskGroupItemModel) async throws(DisksModelDiskLoadPasswordError) -> String {
     try await self.loadPassword(uuid: disk.uuid, name: disk.name)
   }
 

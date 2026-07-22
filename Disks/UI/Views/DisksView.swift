@@ -15,28 +15,54 @@ struct DisksView: View {
   @Environment(DisksModel.self) private var disks
 
   var body: some View {
-    Section {
-      ForEach(self.disks.disks) { disk in
-        Button {
-          Task {
-            if disk.isMounted {
-              await self.unmount(disk: disk)
-            } else {
-              await self.mount(disk: disk)
+    ForEach(self.disks.diskGroups) { group in
+      Section(group.name) {
+        ForEach(group.items) { item in
+          Button {
+            Task {
+              if item.isMounted {
+                await self.unmount(disk: item)
+              } else {
+                await self.mount(disk: item)
+              }
             }
+          } label: {
+            Label {
+              Text(item.name)
+                .foregroundStyle(item.isMounted ? .primary : .secondary)
+            } icon: {
+              item.icon
+            }
+            .labelStyle(.titleAndIcon)
           }
-        } label: {
-          Label {
-            Text(disk.name)
-              .foregroundStyle(disk.isMounted ? .primary : .secondary)
-          } icon: {
-            disk.icon
-          }
-          .labelStyle(.titleAndIcon)
         }
       }
-    } header: {
-      Text(verbatim: "Disks")
+    }
+
+    ForEach(self.disks.diskImageGroups) { group in
+      Section {
+        ForEach(group.items) { item in
+          Button {
+            Task {
+              if item.isMounted {
+                await self.unmount(diskFromDiskImage: item)
+              } else {
+                await self.mount(disk: item)
+              }
+            }
+          } label: {
+            Label {
+              Text(item.name)
+                .foregroundStyle(item.isMounted ? .primary : .secondary)
+            } icon: {
+              item.icon
+            }
+            .labelStyle(.titleAndIcon)
+          }
+        }
+      } header: {
+        Text(verbatim: "Disk Image")
+      }
     }
 
     Section {
@@ -78,7 +104,7 @@ struct DisksView: View {
     }
   }
 
-  private func mount(disk: DiskModel) async {
+  private func mount(disk: DiskGroupItemModel) async {
     let mount: DisksModelMount
 
     do {
@@ -93,6 +119,7 @@ struct DisksView: View {
       case .ok:
         break
       case .encrypted:
+        let model = DiskModel(uuid: disk.uuid, device: disk.device, name: disk.name)
         let password: String
 
         do {
@@ -100,18 +127,18 @@ struct DisksView: View {
         } catch {
           Logger.ui.error("Could not load password for disk: \(error)")
 
-          self.disks.diskSceneDisk = disk
+          self.disks.diskSceneDisk = model
           self.disks.isDiskScenePresented = true
 
           return
         }
 
         do {
-          try await self.disks.mount(disk: disk, passphrase: password)
+          try await self.disks.mount(disk: model, passphrase: password)
         } catch let error {
           Logger.ui.error("Could not mount disk with passphrase: \(error)")
 
-          self.disks.diskSceneDisk = disk
+          self.disks.diskSceneDisk = model
           self.disks.isDiskScenePresented = true
 
           return
@@ -119,11 +146,21 @@ struct DisksView: View {
     }
   }
 
-  private func unmount(disk: DiskModel) async {
+  private func unmount(disk: DiskGroupItemModel) async {
     do {
       try await self.disks.unmount(disk: disk)
     } catch {
       Logger.ui.error("Could not unmount disk: \(error)")
+
+      return
+    }
+  }
+
+  private func unmount(diskFromDiskImage disk: DiskGroupItemModel) async {
+    do {
+      try await self.disks.unmount(diskFromDiskImage: disk)
+    } catch {
+      Logger.ui.error("Could not unmount disk from disk image: \(error)")
 
       return
     }

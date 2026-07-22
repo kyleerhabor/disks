@@ -43,7 +43,7 @@ private class DisksModelMountActionContext {
 }
 
 extension DisksModel {
-  func mount(disk: DiskModel) async throws(DisksModelMountError) -> DisksModelMount {
+  func mount(disk: DiskGroupItemModel) async throws(DisksModelMountError) -> DisksModelMount {
     let session = self.session!
     let mount = try await self.mount(device: disk.device, session: session.session)
 

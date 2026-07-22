@@ -40,26 +40,27 @@ private class DisksModelUnmountActionContext {
 }
 
 extension DisksModel {
-  func unmount(disk: DiskModel) async throws(DisksModelUnmountError) {
+  func unmount(disk: DiskGroupItemModel) async throws(DisksModelUnmountError) {
+    let session = self.session!
+    try await self.unmount(device: disk.device, session: session.session)
+  }
+
+  func unmount(diskFromDiskImage disk: DiskGroupItemModel) async throws(DisksModelUnmountError) {
     let session = self.session!
     try await self.unmount(device: disk.device, session: session.session)
 
-    guard disk.isFromDiskImage else {
+    let group = self.diskImageGroups.first { group in
+      group.items.contains { $0.id == disk.id }
+    }!
+
+    guard group.items.allSatisfy({ $0.id == disk.id || !$0.isMounted }) else {
       return
     }
 
-    let anyMounted = self.disks.contains { other in
-      other.device != disk.device
-      && other.wholeDevice == disk.wholeDevice
-      && other.isMounted
-    }
-
-    guard !anyMounted else {
-      return
-    }
-
-    try await self.detach(device: disk.wholeDevice)
+    let wholeDevice = self.disks[disk.device]!.wholeDevice
+    try await self.detach(device: wholeDevice)
   }
+
 
   nonisolated private func unmount(device: String, session: DASession) async throws(DisksModelUnmountError) {
     guard let disk = DADiskCreateFromBSDName(nil, session, device) else {
