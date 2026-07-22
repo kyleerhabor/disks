@@ -7,10 +7,6 @@
 
 import Foundation
 
-extension URL {
-  static let diskutil = Self(filePath: "/usr/sbin/diskutil", directoryHint: .notDirectory)
-}
-
 struct DisksModelMountPassphraseBadOutputError {
   let data: Data
   let underlyingError: any Error

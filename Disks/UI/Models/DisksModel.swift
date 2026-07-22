@@ -23,7 +23,6 @@ private func device(disk: DADisk) -> String? {
   return name
 }
 
-
 extension UUID {
   static let efiPartition = Self(uuidString: "C12A7328-F81F-11D2-BA4B-00A0C93EC93B")!
 }
@@ -86,10 +85,6 @@ struct DiskUnmountApprovalAction {
     self.callback = callback
     self.context = context
   }
-}
-
-enum DiskModelKind {
-  
 }
 
 @Observable
@@ -187,11 +182,7 @@ final class DisksModel {
       fatalError()
     }
 
-    let queue = DispatchQueue(
-      label: "\(Bundle.appID).disk-arbitration",
-      target: .global(qos: .default),
-    )
-
+    let queue = DispatchQueue(label: "\(Bundle.appID).disk-arbitration", target: .global(qos: .default))
     let session = DiskSession(session: s, queue: queue)
     let stream = AsyncStream<DisksModelEvent>.makeStream()
     self.sessionContinuation = stream.continuation

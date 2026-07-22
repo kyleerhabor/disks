@@ -65,7 +65,8 @@ extension DisksModelWholeDeviceOutput: Decodable {
 
 enum DisksModelWholeDeviceErrorCode {
   case process(any Error),
-       decode(any Error)
+       decode(any Error),
+       notFound
 }
 
 struct DisksModelWholeDeviceError {
@@ -112,7 +113,10 @@ extension DisksModel {
       }
     }
 
-    let name = volumeToWhole[name]!
+    // If you create a disk image in Disk Utility, none of the disks appear in the list.
+    guard let name = volumeToWhole[name] else {
+      throw DisksModelWholeDeviceError(code: .notFound)
+    }
 
     return name
   }
