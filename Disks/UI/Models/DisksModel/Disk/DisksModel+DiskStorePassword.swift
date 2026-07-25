@@ -28,10 +28,10 @@ extension DisksModelDiskStorePasswordError: Error {}
 
 extension DisksModel {
   func store(disk: DiskModel, password: String) async throws(DisksModelDiskStorePasswordError) {
-    try await self.store(uuid: disk.uuid, password: password)
+    try await self.store(volumeID: disk.uuid, password: password)
   }
 
-  nonisolated private func store(uuid: UUID, password: String) async throws(DisksModelDiskStorePasswordError) {
+  nonisolated private func store(volumeID: UUID, password: String) async throws(DisksModelDiskStorePasswordError) {
     let connection: DatabasePool
 
     do {
@@ -44,11 +44,11 @@ extension DisksModel {
 
     do {
       disk = try await connection.write { db in
-        if let disk = try DiskRecord.filter(DiskRecord.Columns.uuid == uuid).fetchOne(db) {
+        if let disk = try DiskRecord.fetchOne(db, key: [DiskRecord.Columns.volumeID.name: volumeID]) {
           return disk
         }
 
-        var disk = DiskRecord(id: UUID(), uuid: uuid)
+        var disk = DiskRecord(id: UUID(), volumeID: volumeID)
         try disk.insert(db)
 
         return disk

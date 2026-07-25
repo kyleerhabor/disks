@@ -7,10 +7,13 @@
 
 import DiskArbitration
 import Foundation
+import GRDB
 import IOKit.kext
+import IOKit.storage
 import Observation
 import OSLog
 import SwiftUI
+import System
 
 private func device(disk: DADisk) -> String? {
   // This is nil on {id = /System/Volumes/Data/home?owner=0}
@@ -110,7 +113,7 @@ extension DiskGroupItemModel: Identifiable {
 @Observable
 @MainActor
 final class DiskGroupModel {
-  let device: String
+  @ObservationIgnored let device: String
   var name: String
   var items: [DiskGroupItemModel]
 
@@ -130,11 +133,13 @@ extension DiskGroupModel: Identifiable {
 @Observable
 @MainActor
 final class DiskImageGroupModel {
-  let device: String
+  @ObservationIgnored let device: String
+  let name: String
   var items: [DiskGroupItemModel]
 
-  init(device: String, items: [DiskGroupItemModel]) {
+  init(device: String, name: String, items: [DiskGroupItemModel]) {
     self.device = device
+    self.name = name
     self.items = items
   }
 }
@@ -162,9 +167,15 @@ struct DiskImageModel {
 }
 
 private struct DisksModelDisk {
+  // MARK: Device
+  let deviceSerial: String?
   let isDeviceInternal: Bool?
+
+  // MARK: Media
   let mediaName: String
   let mediaIcon: NSImage
+
+  // MARK: Volume
   let volumeID: UUID?
   let volumeName: String?
   let isVolumeMounted: Bool?
@@ -185,29 +196,43 @@ private enum DisksModelProcessError: Error {
 
 struct DisksModelItem {
   let device: String
-  let wholeDevice: String
+  let rootDevice: String
+
+  // MARK: Disk Image
   let isFromDiskImage: Bool
+  let diskImageName: String?
+
+  // MARK: Device
+  let deviceSerial: String?
+  let isDeviceInternal: Bool?
+
+  // MARK: Media
   let mediaName: String
   let mediaIcon: NSImage
-  let isDeviceInternal: Bool?
+
+  // MARK: Volume
   let volumeID: UUID?
   let volumeName: String?
   let isVolumeMounted: Bool?
 
   init(
     device: String,
-    wholeDevice: String,
+    rootDevice: String,
     isFromDiskImage: Bool,
+    diskImageName: String?,
+    deviceSerial: String?,
+    isDeviceInternal: Bool?,
     mediaName: String,
     mediaIcon: NSImage,
-    isDeviceInternal: Bool?,
     volumeID: UUID?,
     volumeName: String?,
     isVolumeMounted: Bool?,
   ) {
     self.device = device
-    self.wholeDevice = wholeDevice
+    self.rootDevice = rootDevice
     self.isFromDiskImage = isFromDiskImage
+    self.diskImageName = diskImageName
+    self.deviceSerial = deviceSerial
     self.mediaName = mediaName
     self.mediaIcon = mediaIcon
     self.isDeviceInternal = isDeviceInternal
@@ -220,21 +245,31 @@ struct DisksModelItem {
 @Observable
 @MainActor
 final class DisksModel {
-  // MARK: - Disk alert scene
+  // MARK: Disk alert scene
   var diskSceneDisk: DiskModel?
   var isDiskScenePresented = false
 
-  // MARK: - Disk image alert scene
+  // MARK: Disk image alert scene
   var diskImageSceneImage: DiskImageModel?
   var isDiskImageScenePresented = false
 
-  // MARK: - Unlock failed alert scene
+  // MARK: Unlock failed alert scene
   var isUnlockFailedScenePresented = false
+
+  // MARK: Rename disk drive scene
+  var renameDiskDriveSceneDrive: RenameDiskDriveModel?
+  var isRenameDiskDriveScenePresented = false
 
   // MARK: -
   private(set) var diskGroups = [DiskGroupModel]()
   private(set) var diskImageGroups = [DiskImageGroupModel]()
-  private(set) var disks = [String: DisksModelItem]()
+
+  // MARK: Database
+  @ObservationIgnored private var driveNames = [String: String]()
+  @ObservationIgnored private var driveNamesTask: Task<Void, Never>?
+
+  // MARK: Disk Arbitration
+  @ObservationIgnored private(set) var disks = [String: DisksModelItem]()
   @ObservationIgnored private(set) var session: DiskSession?
   @ObservationIgnored private(set) var appearedAction: DiskAppearedAction?
   @ObservationIgnored private(set) var disappearedAction: DiskDisappearedAction?
@@ -245,6 +280,42 @@ final class DisksModel {
   @ObservationIgnored private var sessionTask: Task<Void, Never>?
 
   func start() {
+    self.driveNamesTask = Task { [weak self] in
+      guard let self else {
+        return
+      }
+
+      let connection: DatabasePool
+
+      do {
+        connection = try await databaseConnection()
+      } catch {
+        print(error)
+
+        return
+      }
+
+      let observation = ValueObservation.trackingConstantRegion { db in
+        try DiskDriveRecord
+          .filter(DiskDriveRecord.Columns.name != nil)
+          .fetchAll(db)
+      }
+
+      do {
+        for try await drives in observation.values(in: connection) {
+          self.driveNames = drives.reduce(into: [:]) { partialResult, drive in
+            partialResult[drive.serial!] = drive.name!
+          }
+
+          self.set()
+        }
+      } catch {
+        print(error)
+
+        return
+      }
+    }
+
     guard let s = DASessionCreate(nil) else {
       fatalError()
     }
@@ -336,6 +407,9 @@ final class DisksModel {
   }
 
   func stop() {
+    self.driveNamesTask!.cancel()
+    self.driveNamesTask = nil
+
     let session = self.session!
     // Stop session
     DASessionSetDispatchQueue(session.session, nil)
@@ -386,6 +460,17 @@ final class DisksModel {
     self.descriptionChangedAction = nil
     self.mountApprovalAction = nil
     self.unmountApprovalAction = nil
+  }
+
+  func presentRenameDiskDriveScene(group: DiskGroupModel) {
+    let disk = self.disks[group.device]!
+    self.renameDiskDriveSceneDrive = RenameDiskDriveModel(
+      device: group.device,
+      mediaName: disk.mediaName,
+      name: disk.deviceSerial.flatMap { self.driveNames[$0] } ?? "",
+    )
+
+    self.isRenameDiskDriveScenePresented = true
   }
 
   @discardableResult
@@ -477,20 +562,21 @@ final class DisksModel {
   }
 
   private func set() {
-    self.diskGroups = Dictionary(grouping: self.disks.values, by: \.wholeDevice)
-      .compactMap { (wholeDevice, items) in
-        guard let whole = items.first(where: { $0.device == wholeDevice }),
+    self.diskGroups = Dictionary(grouping: self.disks.values, by: \.rootDevice)
+      .compactMap { (rootDevice, items) in
+        guard let whole = items.first(where: { $0.device == rootDevice }),
               !whole.isFromDiskImage else {
           return nil
         }
 
+        let name = whole.deviceSerial.flatMap { self.driveNames[$0] } ?? whole.mediaName
         let group: DiskGroupModel
 
         if let model = self.diskGroups.first(where: { $0.device == whole.device }) {
-          model.name = whole.mediaName
+          model.name = name
           group = model
         } else {
-          group = DiskGroupModel(device: whole.device, name: whole.mediaName, items: [])
+          group = DiskGroupModel(device: whole.device, name: name, items: [])
         }
 
         let items = items
@@ -504,7 +590,7 @@ final class DisksModel {
       .filter { !$0.items.isEmpty }
       .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
 
-    self.diskImageGroups = Dictionary(grouping: self.disks.values, by: \.wholeDevice)
+    self.diskImageGroups = Dictionary(grouping: self.disks.values, by: \.rootDevice)
       .compactMap { (wholeDevice, items) in
         guard let whole = items.first(where: { $0.device == wholeDevice }),
               whole.isFromDiskImage else {
@@ -512,7 +598,7 @@ final class DisksModel {
         }
 
         let group = self.diskImageGroups.first { $0.device == whole.device }
-        ?? DiskImageGroupModel(device: whole.device, items: [])
+        ?? DiskImageGroupModel(device: whole.device, name: whole.diskImageName!, items: [])
 
         let items = items
           .compactMap { self.set(item: $0, items: group.items) }
@@ -525,14 +611,22 @@ final class DisksModel {
       .filter { !$0.items.isEmpty }
   }
 
-  private func addDisk(device: String, wholeDevice: String, isFromDiskImage: Bool, disk: DisksModelDisk) {
+  private func addDisk(
+    device: String,
+    rootDevice: String,
+    isFromDiskImage: Bool,
+    diskImageName: String?,
+    disk: DisksModelDisk,
+  ) {
     self.disks[device] = DisksModelItem(
       device: device,
-      wholeDevice: wholeDevice,
+      rootDevice: rootDevice,
       isFromDiskImage: isFromDiskImage,
+      diskImageName: diskImageName,
+      deviceSerial: disk.deviceSerial,
+      isDeviceInternal: disk.isDeviceInternal,
       mediaName: disk.mediaName,
       mediaIcon: disk.mediaIcon,
-      isDeviceInternal: disk.isDeviceInternal,
       volumeID: disk.volumeID,
       volumeName: disk.volumeName,
       isVolumeMounted: disk.isVolumeMounted,
@@ -556,12 +650,14 @@ final class DisksModel {
 
     self.disks[device] = DisksModelItem(
       device: item.device,
-      wholeDevice: item.wholeDevice,
+      rootDevice: item.rootDevice,
       isFromDiskImage: item.isFromDiskImage,
+      diskImageName: item.diskImageName,
+      deviceSerial: disk.deviceSerial,
+      isDeviceInternal: disk.isDeviceInternal,
       mediaName: disk.mediaName,
       mediaIcon: disk.mediaIcon,
-      isDeviceInternal: item.isDeviceInternal,
-      volumeID: item.volumeID,
+      volumeID: disk.volumeID,
       volumeName: disk.volumeName,
       isVolumeMounted: disk.isVolumeMounted,
     )
@@ -574,10 +670,10 @@ final class DisksModel {
       return
     }
 
-    let wholeDevice: String
+    let rootDevice: String
 
     do {
-      wholeDevice = try await self.wholeDevice(name: device)
+      rootDevice = try await self.rootDevice(name: device)
     } catch let error {
       switch error.code {
         case .notFound:
@@ -590,19 +686,35 @@ final class DisksModel {
     }
 
     let isFromDiskImage: Bool
+    let diskImageName: String?
 
-    do {
-      isFromDiskImage = try await self.isDiskImage(device: wholeDevice)
-    } catch {
-      Logger.ui.error("\(error)")
+    if rootDevice == device {
+      let diskImage: DisksModelDiskImageInfo?
 
-      return
+      do {
+        diskImage = try await self.diskImage(rootDevice: rootDevice)
+      } catch let error {
+        guard case .notFound = error.reason else {
+          print(error)
+
+          return
+        }
+
+        diskImage = nil
+      }
+
+      diskImageName = diskImage?.path.stem!
+      isFromDiskImage = diskImage != nil
+    } else {
+      isFromDiskImage = false
+      diskImageName = nil
     }
 
     await self.addDisk(
       device: device,
-      wholeDevice: wholeDevice,
+      rootDevice: rootDevice,
       isFromDiskImage: isFromDiskImage,
+      diskImageName: diskImageName,
       disk: self.disk(disk: disk),
     )
   }
@@ -651,7 +763,9 @@ final class DisksModel {
       isVolumeMounted = nil
     }
 
+    let serial = self.serial(from: DADiskCopyIOMedia(disk))
     let disk = DisksModelDisk(
+      deviceSerial: serial,
       isDeviceInternal: isDeviceInternal,
       mediaName: name,
       mediaIcon: icon,
@@ -677,5 +791,21 @@ final class DisksModel {
     let image = bundle.image(forResource: bundleResourceFile)!
 
     return image
+  }
+
+  nonisolated private func serial(from service: io_service_t) -> String? {
+    guard let representation = IORegistryEntrySearchCFProperty(
+      service,
+      kIOServicePlane,
+      "Serial Number" as CFString,
+      nil,
+      IOOptionBits(kIORegistryIterateRecursively | kIORegistryIterateParents),
+    ) else {
+      return nil
+    }
+
+    let serial = representation as! String
+
+    return serial
   }
 }

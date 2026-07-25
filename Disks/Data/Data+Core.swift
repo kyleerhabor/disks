@@ -74,12 +74,14 @@ extension DiskImageRecord: TableRecord {
 struct DiskRecord {
   var rowID: RowID?
   let id: UUID?
-  let uuid: UUID?
 
-  init(rowID: RowID? = nil, id: UUID?, uuid: UUID?) {
+  // MARK: Volume
+  let volumeID: UUID?
+
+  init(rowID: RowID? = nil, id: UUID?, volumeID: UUID?) {
     self.rowID = rowID
     self.id = id
-    self.uuid = uuid
+    self.volumeID = volumeID
   }
 }
 
@@ -88,12 +90,16 @@ extension DiskRecord: Equatable, FetchableRecord {}
 extension DiskRecord: Codable {
   enum CodingKeys: String, CodingKey {
     case rowID = "rowid",
-         id, uuid
+         id,
+         volumeID = "volume_id"
   }
 
   enum Columns {
     static let id = Column(CodingKeys.id)
-    static let uuid = Column(CodingKeys.uuid)
+    static let volumeID = Column(CodingKeys.volumeID)
+
+    // MARK: v1
+    static let uuidv1 = Column("uuid")
   }
 }
 
@@ -110,6 +116,119 @@ extension DiskRecord: TableRecord {
   }
 }
 
+//struct DiskDiskDriveRecord {
+//  var rowID: RowID?
+//  let drive: RowID?
+//  let disk: RowID?
+//
+//  init(rowID: RowID? = nil, drive: RowID?, disk: RowID?) {
+//    self.rowID = rowID
+//    self.drive = drive
+//    self.disk = disk
+//  }
+//}
+//
+//extension DiskDiskDriveRecord: Equatable, FetchableRecord {}
+//
+//extension DiskDiskDriveRecord: Codable {
+//  enum CodingKeys: String, CodingKey {
+//    case rowID = "rowid",
+//         drive, disk
+//  }
+//
+//  enum Columns {
+//    static let drive = Column(CodingKeys.drive)
+//    static let disk = Column(CodingKeys.disk)
+//  }
+//}
+//
+//extension DiskDiskDriveRecord: MutablePersistableRecord {
+//  mutating func didInsert(_ inserted: InsertionSuccess) {
+//    self.rowID = inserted.rowID
+//  }
+//}
+//
+//extension DiskDiskDriveRecord: TableRecord {
+//  static let databaseTableName = "disk_disk_drives"
+//  static var databaseSelection: [any SQLSelectable] {
+//    Self.everyColumn
+//  }
+//}
+
+struct DiskDriveRecord {
+  var rowID: RowID?
+  let serial: String?
+  let name: String?
+
+  init(rowID: RowID? = nil, serial: String?, name: String?) {
+    self.rowID = rowID
+    self.serial = serial
+    self.name = name
+  }
+}
+
+extension DiskDriveRecord: Equatable, FetchableRecord {}
+
+extension DiskDriveRecord: Codable {
+  enum CodingKeys: String, CodingKey {
+    case rowID = "rowid",
+         serial, name
+  }
+
+  enum Columns {
+    static let serial = Column(CodingKeys.serial)
+    static let name = Column(CodingKeys.name)
+  }
+}
+
+extension DiskDriveRecord: MutablePersistableRecord {
+  mutating func didInsert(_ inserted: InsertionSuccess) {
+    self.rowID = inserted.rowID
+  }
+}
+
+extension DiskDriveRecord: TableRecord {
+  static let databaseTableName = "disk_drives"
+  static var databaseSelection: [any SQLSelectable] {
+    Self.everyColumn
+  }
+}
+
+//struct DiskImageDriveRecord {
+//  var rowID: RowID?
+//  let image: RowID?
+//
+//  init(rowID: RowID? = nil, image: RowID?) {
+//    self.rowID = rowID
+//    self.image = image
+//  }
+//}
+//
+//extension DiskImageDriveRecord: Equatable, FetchableRecord {}
+//
+//extension DiskImageDriveRecord: Codable {
+//  enum CodingKeys: String, CodingKey {
+//    case rowID = "rowid",
+//         image
+//  }
+//
+//  enum Columns {
+//    static let image = Column(CodingKeys.image)
+//  }
+//}
+//
+//extension DiskImageDriveRecord: MutablePersistableRecord {
+//  mutating func didInsert(_ inserted: InsertionSuccess) {
+//    self.rowID = inserted.rowID
+//  }
+//}
+//
+//extension DiskImageDriveRecord: TableRecord {
+//  static let databaseTableName = "disk_image_drives"
+//  static var databaseSelection: [any SQLSelectable] {
+//    Self.everyColumn
+//  }
+//}
 
 func createSchema(_ connection: some DatabaseWriter) async throws {
   var migrator = DatabaseMigrator()
@@ -135,10 +254,71 @@ func createSchema(_ connection: some DatabaseWriter) async throws {
         .unique()
 
       table
-        .column(DiskRecord.Columns.uuid.name, .blob)
+        .column(DiskRecord.Columns.uuidv1.name, .blob)
         .notNull()
         .unique()
     }
+  }
+
+  migrator.registerMigration("v2") { db in
+    let disksTemporaryTableName = "\(DiskRecord.databaseTableName)_v2"
+    try db.create(table: disksTemporaryTableName) { table in
+      table.primaryKey(Column.rowID.name, .integer)
+      table
+        .column(DiskRecord.Columns.id.name, .blob)
+        .notNull()
+        .unique()
+
+      table
+        .column(DiskRecord.Columns.volumeID.name, .blob)
+        .unique()
+    }
+
+    try db.execute(
+      literal: """
+      INSERT INTO \(identifier: disksTemporaryTableName) \
+      (\(Column.rowID), \(DiskRecord.Columns.id), \(DiskRecord.Columns.volumeID)) \
+      SELECT \(Column.rowID), \(DiskRecord.Columns.id), \(DiskRecord.Columns.uuidv1) FROM \(DiskRecord.self)  
+      """,
+    )
+
+    try db.drop(table: DiskRecord.databaseTableName)
+    try db.rename(table: disksTemporaryTableName, to: DiskRecord.databaseTableName)
+    try db.create(table: DiskDriveRecord.databaseTableName) { table in
+      table.primaryKey(Column.rowID.name, .integer)
+      table
+        .column(DiskDriveRecord.Columns.serial.name, .text)
+        .notNull()
+        .unique()
+
+      table.column(DiskDriveRecord.Columns.name.name, .text)
+    }
+
+//    try db.create(table: DiskDiskDriveRecord.databaseTableName) { table in
+//      table.primaryKey(Column.rowID.name, .integer)
+//      table
+//        .column(DiskDiskDriveRecord.Columns.drive.name, .integer)
+//        .notNull()
+//        .references(DiskDriveRecord.databaseTableName)
+//        .indexed()
+//
+//      table
+//        .column(DiskDiskDriveRecord.Columns.disk.name, .integer)
+//        .notNull()
+//        .unique()
+//        .references(DiskDiskDriveRecord.databaseTableName)
+//    }
+//
+//    try db.create(table: DiskImageDriveRecord.databaseTableName) { table in
+//      table.primaryKey(Column.rowID.name, .integer)
+//      table
+//        .column(DiskImageDriveRecord.Columns.image.name, .integer)
+//        .notNull()
+//        .unique()
+//        .references(DiskImageRecord.databaseTableName)
+//
+//      table.column(DiskDriveRecord.Columns.name.name, .text)
+//    }
   }
 
   #if DEBUG

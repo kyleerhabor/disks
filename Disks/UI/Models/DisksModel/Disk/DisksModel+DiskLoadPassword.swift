@@ -58,7 +58,7 @@ extension DisksModel {
 
     do {
       disk = try await connection.read { db in
-        try DiskRecord.fetchOne(db, key: [DiskRecord.Columns.uuid.name: uuid])
+        try DiskRecord.fetchOne(db, key: [DiskRecord.Columns.volumeID.name: uuid])
       }
     } catch {
       throw DisksModelDiskLoadPasswordError(code: .database(error))

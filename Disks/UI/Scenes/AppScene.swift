@@ -16,7 +16,8 @@ struct AppScene: Scene {
     // This requires using NSAlert.
     DiskPasswordScene()
     DiskImagePasswordScene()
-    
+    RenameDiskDriveScene()
+
     UnlockFailedScene()
   }
 }

@@ -76,7 +76,7 @@ struct DisksModelWholeDeviceError {
 extension DisksModelWholeDeviceError: Error {}
 
 extension DisksModel {
-  nonisolated func wholeDevice(name: String) async throws(DisksModelWholeDeviceError) -> String {
+  nonisolated func rootDevice(name: String) async throws(DisksModelWholeDeviceError) -> String {
     let data: Data
 
     do {

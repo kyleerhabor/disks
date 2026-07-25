@@ -16,52 +16,62 @@ struct DisksView: View {
 
   var body: some View {
     ForEach(self.disks.diskGroups) { group in
-      Section(group.name) {
-        ForEach(group.items) { item in
-          Button {
-            Task {
-              if item.isMounted {
-                await self.unmount(disk: item)
-              } else {
-                await self.mount(disk: item)
+      Menu(group.name) {
+        Section {
+          ForEach(group.items) { item in
+            Button {
+              Task {
+                if item.isMounted {
+                  await self.unmount(disk: item)
+                } else {
+                  await self.mount(disk: item)
+                }
               }
+            } label: {
+              Label {
+                Text(item.name)
+                  .foregroundStyle(item.isMounted ? .primary : .secondary)
+              } icon: {
+                item.icon
+              }
+              .labelStyle(.titleAndIcon)
             }
+          }
+        }
+
+        Section {
+          Button {
+            self.disks.presentRenameDiskDriveScene(group: group)
           } label: {
-            Label {
-              Text(item.name)
-                .foregroundStyle(item.isMounted ? .primary : .secondary)
-            } icon: {
-              item.icon
-            }
-            .labelStyle(.titleAndIcon)
+            Text(verbatim: "Rename...")
           }
         }
       }
     }
 
     ForEach(self.disks.diskImageGroups) { group in
-      Section {
-        ForEach(group.items) { item in
-          Button {
-            Task {
-              if item.isMounted {
-                await self.unmount(diskFromDiskImage: item)
-              } else {
-                await self.mount(disk: item)
+      Menu(group.name) {
+        Section {
+          ForEach(group.items) { item in
+            Button {
+              Task {
+                if item.isMounted {
+                  await self.unmount(diskFromDiskImage: item)
+                } else {
+                  await self.mount(disk: item)
+                }
               }
+            } label: {
+              Label {
+                Text(item.name)
+                  .foregroundStyle(item.isMounted ? .primary : .secondary)
+              } icon: {
+                item.icon
+              }
+              .labelStyle(.titleAndIcon)
             }
-          } label: {
-            Label {
-              Text(item.name)
-                .foregroundStyle(item.isMounted ? .primary : .secondary)
-            } icon: {
-              item.icon
-            }
-            .labelStyle(.titleAndIcon)
           }
         }
-      } header: {
-        Text(verbatim: "Disk Image")
       }
     }
 

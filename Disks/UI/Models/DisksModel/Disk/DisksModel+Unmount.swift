@@ -57,7 +57,7 @@ extension DisksModel {
       return
     }
 
-    let wholeDevice = self.disks[disk.device]!.wholeDevice
+    let wholeDevice = self.disks[disk.device]!.rootDevice
     try await self.detach(device: wholeDevice)
   }
 
