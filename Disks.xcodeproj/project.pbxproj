@@ -10,6 +10,7 @@
 		0009FAD0300C643000AF09E3 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 0009FACF300C643000AF09E3 /* GRDB */; };
 		00C86EDC300D864A003D6D7B /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 00C86EDB300D864A003D6D7B /* LICENSE */; };
 		00C86EDE300D87E4003D6D7B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 00C86EDD300D87E4003D6D7B /* README.md */; };
+		00DB5C6E301FF77000E55ED7 /* DisksCoreDiskArbitration in Frameworks */ = {isa = PBXBuildFile; productRef = 00DB5C6D301FF77000E55ED7 /* DisksCoreDiskArbitration */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +62,7 @@
 		000B492B300899E600A0015B /* DisksUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DisksUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00C86EDB300D864A003D6D7B /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		00C86EDD300D87E4003D6D7B /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		00DB5C6B301FF73500E55ED7 /* DisksCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = DisksCore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -110,6 +112,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0009FAD0300C643000AF09E3 /* GRDB in Frameworks */,
+				00DB5C6E301FF77000E55ED7 /* DisksCoreDiskArbitration in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,9 +140,11 @@
 				00C86EDB300D864A003D6D7B /* LICENSE */,
 				000B499C30089A2F00A0015B /* Configuration */,
 				000B4916300899E100A0015B /* Disks */,
+				00DB5C6B301FF73500E55ED7 /* DisksCore */,
 				000B4924300899E600A0015B /* DisksTests */,
 				000B492E300899E600A0015B /* DisksUITests */,
 				00EE4D823010188200932356 /* Documentation */,
+				00DB5C6C301FF77000E55ED7 /* Frameworks */,
 				000B4915300899E100A0015B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -152,6 +157,13 @@
 				000B492B300899E600A0015B /* DisksUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		00DB5C6C301FF77000E55ED7 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -179,6 +191,7 @@
 			name = Disks;
 			packageProductDependencies = (
 				0009FACF300C643000AF09E3 /* GRDB */,
+				00DB5C6D301FF77000E55ED7 /* DisksCoreDiskArbitration */,
 			);
 			productName = Disks;
 			productReference = 000B4914300899E100A0015B /* Disks.app */;
@@ -680,6 +693,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0009FA67300C625F00AF09E3 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
+		};
+		00DB5C6D301FF77000E55ED7 /* DisksCoreDiskArbitration */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DisksCoreDiskArbitration;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

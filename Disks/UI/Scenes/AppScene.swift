@@ -14,10 +14,17 @@ struct AppScene: Scene {
     // TODO: Display disk icon in secondary position.
     //
     // This requires using NSAlert.
-    DiskPasswordScene()
-    DiskImagePasswordScene()
-    RenameDiskDriveScene()
 
-    UnlockFailedScene()
+    // MARK: Mounting
+    UnlockDiskScene()
+    UnlockFailureDiskScene()
+    UnlockDiskImageScene()
+    UnlockFailureDiskImageScene()
+
+    // MARK: Unmounting
+    UnmountBusyDiskScene()
+
+    // MARK: Renaming
+    RenameDiskDriveScene()
   }
 }

@@ -32,16 +32,82 @@ extension TableRecord {
   }
 }
 
+struct DiskRecord {
+  var rowID: RowID?
+  let id: UUID?
+  let uuid: UUID?
+}
+
+extension DiskRecord: Equatable, FetchableRecord {}
+
+extension DiskRecord: Codable {
+  enum CodingKeys: String, CodingKey {
+    case rowID = "rowid",
+         id, uuid
+  }
+
+  enum Columns {
+    static let id = Column(CodingKeys.id)
+    static let uuid = Column(CodingKeys.uuid)
+  }
+}
+
+extension DiskRecord: MutablePersistableRecord {
+  mutating func didInsert(_ inserted: InsertionSuccess) {
+    self.rowID = inserted.rowID
+  }
+}
+
+extension DiskRecord: TableRecord {
+  static let databaseTableName = "disks"
+  static var databaseSelection: [any SQLSelectable] {
+    Self.everyColumn
+  }
+}
+
+struct Disk2Record {
+  var rowID: RowID?
+
+  // MARK: Media
+  let mediaID: UUID?
+
+  init(rowID: RowID? = nil, mediaID: UUID?) {
+    self.rowID = rowID
+    self.mediaID = mediaID
+  }
+}
+
+extension Disk2Record: Equatable, FetchableRecord {}
+
+extension Disk2Record: Codable {
+  enum CodingKeys: String, CodingKey {
+    case rowID = "rowid",
+         mediaID = "media_id"
+  }
+
+  enum Columns {
+    static let mediaID = Column(CodingKeys.mediaID)
+  }
+}
+
+extension Disk2Record: MutablePersistableRecord {
+  mutating func didInsert(_ inserted: InsertionSuccess) {
+    self.rowID = inserted.rowID
+  }
+}
+
+extension Disk2Record: TableRecord {
+  static let databaseTableName = "disks2"
+  static var databaseSelection: [any SQLSelectable] {
+    Self.everyColumn
+  }
+}
+
+
 struct DiskImageRecord {
   var rowID: RowID?
   let id: UUID?
   let uuid: UUID?
-
-  init(rowID: RowID? = nil, id: UUID?, uuid: UUID?) {
-    self.rowID = rowID
-    self.id = id
-    self.uuid = uuid
-  }
 }
 
 extension DiskImageRecord: Equatable, FetchableRecord {}
@@ -71,92 +137,48 @@ extension DiskImageRecord: TableRecord {
   }
 }
 
-struct DiskRecord {
+struct DiskImage2Record {
   var rowID: RowID?
+  // This property shouldn't be used for identifying all disk images because it's only relevant to encrypted disk images,
+  // and is only available while the disk image is not in use (via `hdiutil isencrypted`). A solution is to use URL
+  // bookmarks, but that requires input from the user because the path from `hdiutil info` may not be up-to-date.
   let id: UUID?
 
-  // MARK: Volume
-  let volumeID: UUID?
-
-  init(rowID: RowID? = nil, id: UUID?, volumeID: UUID?) {
+  init(rowID: RowID? = nil, id: UUID?) {
     self.rowID = rowID
     self.id = id
-    self.volumeID = volumeID
   }
 }
 
-extension DiskRecord: Equatable, FetchableRecord {}
+extension DiskImage2Record: Equatable, FetchableRecord {}
 
-extension DiskRecord: Codable {
+extension DiskImage2Record: Codable {
   enum CodingKeys: String, CodingKey {
     case rowID = "rowid",
-         id,
-         volumeID = "volume_id"
+         id
   }
 
   enum Columns {
     static let id = Column(CodingKeys.id)
-    static let volumeID = Column(CodingKeys.volumeID)
-
-    // MARK: v1
-    static let uuidv1 = Column("uuid")
   }
 }
 
-extension DiskRecord: MutablePersistableRecord {
+extension DiskImage2Record: MutablePersistableRecord {
   mutating func didInsert(_ inserted: InsertionSuccess) {
     self.rowID = inserted.rowID
   }
 }
 
-extension DiskRecord: TableRecord {
-  static let databaseTableName = "disks"
+extension DiskImage2Record: TableRecord {
+  static let databaseTableName = "disk_images2"
   static var databaseSelection: [any SQLSelectable] {
     Self.everyColumn
   }
 }
 
-//struct DiskDiskDriveRecord {
-//  var rowID: RowID?
-//  let drive: RowID?
-//  let disk: RowID?
-//
-//  init(rowID: RowID? = nil, drive: RowID?, disk: RowID?) {
-//    self.rowID = rowID
-//    self.drive = drive
-//    self.disk = disk
-//  }
-//}
-//
-//extension DiskDiskDriveRecord: Equatable, FetchableRecord {}
-//
-//extension DiskDiskDriveRecord: Codable {
-//  enum CodingKeys: String, CodingKey {
-//    case rowID = "rowid",
-//         drive, disk
-//  }
-//
-//  enum Columns {
-//    static let drive = Column(CodingKeys.drive)
-//    static let disk = Column(CodingKeys.disk)
-//  }
-//}
-//
-//extension DiskDiskDriveRecord: MutablePersistableRecord {
-//  mutating func didInsert(_ inserted: InsertionSuccess) {
-//    self.rowID = inserted.rowID
-//  }
-//}
-//
-//extension DiskDiskDriveRecord: TableRecord {
-//  static let databaseTableName = "disk_disk_drives"
-//  static var databaseSelection: [any SQLSelectable] {
-//    Self.everyColumn
-//  }
-//}
-
 struct DiskDriveRecord {
   var rowID: RowID?
+  // This should probably be in its own table, but I can't be asked to move around the code.
   let serial: String?
   let name: String?
 
@@ -194,41 +216,97 @@ extension DiskDriveRecord: TableRecord {
   }
 }
 
-//struct DiskImageDriveRecord {
-//  var rowID: RowID?
-//  let image: RowID?
-//
-//  init(rowID: RowID? = nil, image: RowID?) {
-//    self.rowID = rowID
-//    self.image = image
-//  }
-//}
-//
-//extension DiskImageDriveRecord: Equatable, FetchableRecord {}
-//
-//extension DiskImageDriveRecord: Codable {
-//  enum CodingKeys: String, CodingKey {
-//    case rowID = "rowid",
-//         image
-//  }
-//
-//  enum Columns {
-//    static let image = Column(CodingKeys.image)
-//  }
-//}
-//
-//extension DiskImageDriveRecord: MutablePersistableRecord {
-//  mutating func didInsert(_ inserted: InsertionSuccess) {
-//    self.rowID = inserted.rowID
-//  }
-//}
-//
-//extension DiskImageDriveRecord: TableRecord {
-//  static let databaseTableName = "disk_image_drives"
-//  static var databaseSelection: [any SQLSelectable] {
-//    Self.everyColumn
-//  }
-//}
+struct DiskImageDriveRecord {
+  // TODO: Implement support for renaming disk images
+  //
+  // This will support read-only disk image files, like platform simulators from Xcode. DiskImageRecord's ID is from
+  // `hdiutil info`, which is for encrypted disk images only. I'm inclined to use URL bookmarks for this.
+
+  var rowID: RowID?
+  let id: UUID?
+  let image: RowID?
+  let hasKeychainPassword: Bool?
+}
+
+extension DiskImageDriveRecord: Equatable, FetchableRecord {}
+
+extension DiskImageDriveRecord: Codable {
+  enum CodingKeys: String, CodingKey {
+    case rowID = "rowid",
+         id, image,
+         hasKeychainPassword = "has_keychain_password"
+  }
+
+  enum Columns {
+    static let id = Column(CodingKeys.id)
+    static let image = Column(CodingKeys.image)
+    static let hasKeychainPassword = Column(CodingKeys.hasKeychainPassword)
+  }
+}
+
+extension DiskImageDriveRecord: MutablePersistableRecord {
+  mutating func didInsert(_ inserted: InsertionSuccess) {
+    self.rowID = inserted.rowID
+  }
+}
+
+extension DiskImageDriveRecord: TableRecord {
+  static let databaseTableName = "disk_image_drives"
+  static var databaseSelection: [any SQLSelectable] {
+    Self.everyColumn
+  }
+
+  static var image: BelongsToAssociation<Self, DiskImage2Record> {
+    Self.belongsTo(DiskImage2Record.self, using: ForeignKey([Columns.image]))
+  }
+}
+
+struct DriveDiskRecord {
+  var rowID: RowID?
+  let id: UUID?
+  let disk: RowID?
+  let hasKeychainPassword: Bool?
+
+  init(rowID: RowID? = nil, id: UUID?, disk: RowID?, hasKeychainPassword: Bool?) {
+    self.rowID = rowID
+    self.id = id
+    self.disk = disk
+    self.hasKeychainPassword = hasKeychainPassword
+  }
+}
+
+extension DriveDiskRecord: Equatable, FetchableRecord {}
+
+extension DriveDiskRecord: Codable {
+  enum CodingKeys: String, CodingKey {
+    case rowID = "rowid",
+         id, disk,
+         hasKeychainPassword = "has_keychain_password"
+  }
+
+  enum Columns {
+    static let id = Column(CodingKeys.id)
+    static let disk = Column(CodingKeys.disk)
+    static let hasKeychainPassword = Column(CodingKeys.hasKeychainPassword)
+  }
+}
+
+extension DriveDiskRecord: MutablePersistableRecord {
+  mutating func didInsert(_ inserted: InsertionSuccess) {
+    self.rowID = inserted.rowID
+  }
+}
+
+extension DriveDiskRecord: TableRecord {
+  static let databaseTableName = "drive_disks"
+  static var databaseSelection: [any SQLSelectable] {
+    Self.everyColumn
+  }
+
+  static var disk: BelongsToAssociation<Self, Disk2Record> {
+    Self.belongsTo(Disk2Record.self, using: ForeignKey([Columns.disk]))
+  }
+}
 
 func createSchema(_ connection: some DatabaseWriter) async throws {
   var migrator = DatabaseMigrator()
@@ -254,36 +332,65 @@ func createSchema(_ connection: some DatabaseWriter) async throws {
         .unique()
 
       table
-        .column(DiskRecord.Columns.uuidv1.name, .blob)
+        .column(DiskRecord.Columns.uuid.name, .blob)
         .notNull()
         .unique()
     }
   }
 
   migrator.registerMigration("v2") { db in
-    let disksTemporaryTableName = "\(DiskRecord.databaseTableName)_v2"
-    try db.create(table: disksTemporaryTableName) { table in
+    try db.create(table: Disk2Record.databaseTableName) { table in
       table.primaryKey(Column.rowID.name, .integer)
       table
-        .column(DiskRecord.Columns.id.name, .blob)
+        .column(Disk2Record.Columns.mediaID.name, .blob)
+        .notNull()
+        .unique()
+    }
+
+    try db.create(table: DriveDiskRecord.databaseTableName) { table in
+      table.primaryKey(Column.rowID.name, .integer)
+      table
+        .column(DriveDiskRecord.Columns.id.name, .blob)
         .notNull()
         .unique()
 
       table
-        .column(DiskRecord.Columns.volumeID.name, .blob)
+        .column(DriveDiskRecord.Columns.disk.name, .integer)
+        .notNull()
+        .unique()
+        .references(Disk2Record.databaseTableName, onDelete: .cascade)
+
+      table
+        .column(DriveDiskRecord.Columns.hasKeychainPassword.name, .boolean)
+        .notNull()
+    }
+
+    try db.create(table: DiskImage2Record.databaseTableName) { table in
+      table.primaryKey(Column.rowID.name, .integer)
+      table
+        .column(DiskImage2Record.Columns.id.name, .blob)
+        .notNull()
         .unique()
     }
 
-    try db.execute(
-      literal: """
-      INSERT INTO \(identifier: disksTemporaryTableName) \
-      (\(Column.rowID), \(DiskRecord.Columns.id), \(DiskRecord.Columns.volumeID)) \
-      SELECT \(Column.rowID), \(DiskRecord.Columns.id), \(DiskRecord.Columns.uuidv1) FROM \(DiskRecord.self)  
-      """,
-    )
+    try db.create(table: DiskImageDriveRecord.databaseTableName) { table in
+      table.primaryKey(Column.rowID.name, .integer)
+      table
+        .column(DiskImageDriveRecord.Columns.id.name, .blob)
+        .notNull()
+        .unique()
 
-    try db.drop(table: DiskRecord.databaseTableName)
-    try db.rename(table: disksTemporaryTableName, to: DiskRecord.databaseTableName)
+      table
+        .column(DiskImageDriveRecord.Columns.image.name, .integer)
+        .notNull()
+        .unique()
+        .references(DiskImage2Record.databaseTableName, onDelete: .cascade)
+
+      table
+        .column(DiskImageDriveRecord.Columns.hasKeychainPassword.name, .boolean)
+        .notNull()
+    }
+
     try db.create(table: DiskDriveRecord.databaseTableName) { table in
       table.primaryKey(Column.rowID.name, .integer)
       table
@@ -293,32 +400,6 @@ func createSchema(_ connection: some DatabaseWriter) async throws {
 
       table.column(DiskDriveRecord.Columns.name.name, .text)
     }
-
-//    try db.create(table: DiskDiskDriveRecord.databaseTableName) { table in
-//      table.primaryKey(Column.rowID.name, .integer)
-//      table
-//        .column(DiskDiskDriveRecord.Columns.drive.name, .integer)
-//        .notNull()
-//        .references(DiskDriveRecord.databaseTableName)
-//        .indexed()
-//
-//      table
-//        .column(DiskDiskDriveRecord.Columns.disk.name, .integer)
-//        .notNull()
-//        .unique()
-//        .references(DiskDiskDriveRecord.databaseTableName)
-//    }
-//
-//    try db.create(table: DiskImageDriveRecord.databaseTableName) { table in
-//      table.primaryKey(Column.rowID.name, .integer)
-//      table
-//        .column(DiskImageDriveRecord.Columns.image.name, .integer)
-//        .notNull()
-//        .unique()
-//        .references(DiskImageRecord.databaseTableName)
-//
-//      table.column(DiskDriveRecord.Columns.name.name, .text)
-//    }
   }
 
   #if DEBUG

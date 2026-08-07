@@ -1,58 +1,28 @@
 //
-//  DisksModel+DiskImage.swift
+//  DisksModel+DiskImageInfo.swift
 //  Disks
 //
-//  Created by Kyle Erhabor on 7/24/26.
+//  Created by Kyle Erhabor on 7/31/26.
 //
 
 import Foundation
 import System
 
-private struct DisksModelDiskImageInfoOutputImageSystemEntity {
-  let devEntry: FilePath
+private struct InfoProcessOutput {
+  let encrypted: Bool
+  let uuid: UUID?
 }
 
-extension DisksModelDiskImageInfoOutputImageSystemEntity: Decodable {
-  enum CodingKeys: String, CodingKey {
-    case devEntry = "dev-entry"
-  }
+extension InfoProcessOutput: Decodable {}
 
-  init(from decoder: any Decoder) throws {
-    let container = try decoder.container(keyedBy: CodingKeys.self)
-    let entry = try container.decode(String.self, forKey: .devEntry)
-
-    self.devEntry = FilePath(entry)
-  }
+struct DisksModelDiskImageInfoBadProcessExitError {
+  let status: Int32
 }
-
-private struct DisksModelDiskImageInfoOutputImage {
-  let imagePath: FilePath
-  let systemEntities: [DisksModelDiskImageInfoOutputImageSystemEntity]
-}
-
-extension DisksModelDiskImageInfoOutputImage: Decodable {
-  enum CodingKeys: String, CodingKey {
-    case imagePath = "image-path",
-         systemEntities = "system-entities"
-  }
-
-  init(from decoder: any Decoder) throws {
-    let container = try decoder.container(keyedBy: CodingKeys.self)
-    let imagePath = try container.decode(String.self, forKey: .imagePath)
-    self.imagePath = FilePath(imagePath)
-    self.systemEntities = try container.decode([DisksModelDiskImageInfoOutputImageSystemEntity].self, forKey: .systemEntities)
-  }
-}
-
-private struct DisksModelDiskImageInfoOutput {
-  let images: [DisksModelDiskImageInfoOutputImage]
-}
-
-extension DisksModelDiskImageInfoOutput: Decodable {}
 
 enum DisksModelDiskImageInfoErrorReason {
-  case hdiutil(any Error),
-       notFound
+  case process(any Error),
+       badProcessExit(DisksModelDiskImageInfoBadProcessExitError),
+       badProcessOutput
 }
 
 struct DisksModelDiskImageInfoError {
@@ -62,40 +32,37 @@ struct DisksModelDiskImageInfoError {
 extension DisksModelDiskImageInfoError: Error {}
 
 struct DisksModelDiskImageInfo {
-  let path: FilePath
+  let id: UUID?
+  let isEncrypted: Bool
 }
 
 extension DisksModel {
-  func diskImage(rootDevice device: String) async throws(DisksModelDiskImageInfoError) -> DisksModelDiskImageInfo {
-    let data: Data
+  func diskImageInfo(path: FilePath) async throws(DisksModelDiskImageInfoError) -> DisksModelDiskImageInfo {
+    let output: ProcessOutput
 
     do {
-      data = try await self.process(executable: .hdiutil, arguments: ["info", "-plist"], data: Data())
+      output = try await Process.run(executable: .hdiutil, arguments: ["isencrypted", path.string, "-plist"])
     } catch {
-      throw DisksModelDiskImageInfoError(reason: .hdiutil(error))
+      throw DisksModelDiskImageInfoError(reason: .process(error))
+    }
+
+    guard output.exitStatus == 0 else {
+      throw DisksModelDiskImageInfoError(
+        reason: .badProcessExit(DisksModelDiskImageInfoBadProcessExitError(status: output.exitStatus)),
+      )
     }
 
     let decoder = PropertyListDecoder()
-    let output: DisksModelDiskImageInfoOutput
+    let decoded: InfoProcessOutput
 
     do {
-      output = try decoder.decode(DisksModelDiskImageInfoOutput.self, from: data)
+      decoded = try decoder.decode(InfoProcessOutput.self, from: output.output!)
     } catch {
-      throw DisksModelDiskImageInfoError(reason: .hdiutil(error))
+      throw DisksModelDiskImageInfoError(reason: .badProcessOutput)
     }
 
-    let device = FilePath.Component(device)!
-    let entry = FilePath(root: "/", components: "dev", device)
-    let outputImage = output.images.first { image in
-      image.systemEntities.first!.devEntry == entry
-    }
+    let info = DisksModelDiskImageInfo(id: decoded.uuid, isEncrypted: decoded.encrypted)
 
-    guard let outputImage else {
-      throw DisksModelDiskImageInfoError(reason: .notFound)
-    }
-
-    let image = DisksModelDiskImageInfo(path: outputImage.imagePath)
-
-    return image
+    return info
   }
 }

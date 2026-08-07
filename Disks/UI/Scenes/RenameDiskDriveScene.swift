@@ -15,13 +15,13 @@ struct RenameDiskDriveScene: Scene {
     @Bindable var disks = self.disks
 
     AlertScene(
-      Text(verbatim: "Rename Drive"),
+      Text(verbatim: "Rename External Drive"),
       isPresented: $disks.isRenameDiskDriveScenePresented,
       presenting: disks.renameDiskDriveSceneDrive,
     ) { drive in
       @Bindable var drive = drive
 
-      TextField(text: $drive.name, prompt: Text(drive.mediaName)) {
+      TextField(text: $drive.name, prompt: Text(drive.originalName)) {
         Text(verbatim: "Name:")
       }
 
@@ -34,16 +34,16 @@ struct RenameDiskDriveScene: Scene {
       Button {
         Task {
           do {
-            try await self.disks.rename(drive: drive)
+            try await self.disks.rename(resuming: drive.continuation, name: drive.name)
           } catch {
-            Logger.ui.error("Could not rename disk drive: \(error)")
+            Logger.ui.error("\(error)")
           }
         }
       } label: {
         Text(verbatim: "Rename")
       }
     } message: { drive in
-      Text(verbatim: "Enter a name for the drive “\(drive.mediaName)”.")
+      Text(verbatim: "Enter a name for the external drive “\(drive.originalName)”.")
     }
   }
 }

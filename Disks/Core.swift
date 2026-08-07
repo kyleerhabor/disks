@@ -6,12 +6,22 @@
 //
 
 import Foundation
+import Security
 
 func unreachable() -> Never {
   fatalError("Reached supposedly unreachable code")
 }
 
 // MARK: - Foundation
+
+extension UUID {
+  init(_ uuid: CFUUID) {
+    // https://developer.apple.com/documentation/foundation/nsuuid
+    //
+    //   The NSUUID class is not toll-free bridged with CoreFoundation’s CFUUID.
+    self.init(uuidString: CFUUIDCreateString(nil, uuid) as String)!
+  }
+}
 
 extension Bundle {
   static let appID = Bundle.main.bundleIdentifier!
@@ -29,6 +39,25 @@ extension URL {
     return string
   }
 }
+
+// MARK: - Security
+
+func upsertKeychainItem(
+  addQuery: CFDictionary,
+  updateQuery: CFDictionary,
+  updateAttributes: CFDictionary,
+) -> OSStatus {
+  let addStatus = SecItemAdd(addQuery, nil)
+
+  guard addStatus == errSecDuplicateItem else {
+    return addStatus
+  }
+
+  let updateStatus = SecItemUpdate(updateQuery, updateAttributes)
+
+  return updateStatus
+}
+
 
 // MARK: - Swift Concurrency
 

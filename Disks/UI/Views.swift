@@ -7,6 +7,7 @@
 
 import AppKit
 import Foundation
+import SwiftUI
 
 extension NSWorkspace {
   nonisolated func icon(forFileAt url: URL) -> NSImage {
