@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import GRDB
 
 struct DisksScene: Scene {
   @Environment(DisksModel.self) private var disks

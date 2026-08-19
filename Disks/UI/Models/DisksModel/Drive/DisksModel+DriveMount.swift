@@ -220,11 +220,11 @@ private struct DriveMounter: DisksModelMounter {
     var iterator = items.makeIterator()
 
     while let item = iterator.next() {
-      let shouldClearKeychainPassword: Bool
-
       do {
         try await self.mount(item: item)
       } catch {
+        let shouldClearKeychainPassword: Bool
+
         switch error.reason {
           case .encrypted:
             // A password is required

@@ -1,0 +1,41 @@
+name: Release
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v6
+      - name: Archive app
+        run: |
+          xcodebuild \
+            -project Disks.xcodeproj \
+            -scheme Disks \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -archivePath dist/Disks.xcarchive \
+            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="-" ONLY_ACTIVE_ARCH=NO \
+            archive
+      - name: Package app
+        run: |
+          APP="dist/Disks.xcarchive/Products/Applications/Disks.app"
+          codesign --force --deep --sign - "$APP"
+          ditto -c -k --keepParent "$APP" "Disks.app.zip"
+      - name: Package dSYMs
+        run: |
+          ditto -c -k --keepParent "dist/Disks.xcarchive/dSYMs" "Disks-dSYMs.zip"
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: release
+          path: Disks.app.zip Disks-dSYMs.zip
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --generate-notes "Disks.app.zip" "Disks-dSYMs.zip"
