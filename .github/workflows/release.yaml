@@ -33,7 +33,9 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: release
-          path: Disks.app.zip Disks-dSYMs.zip
+          path: |
+            Disks.app.zip
+            Disks-dSYMs.zip
       # - name: Publish release
       #   env:
       #     GH_TOKEN: ${{ github.token }}
