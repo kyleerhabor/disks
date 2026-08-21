@@ -2,15 +2,14 @@ name: Release
 on:
   push:
     tags:
-      - '*'
-  workflow_dispatch: {}
-permissions:
-  contents: write
+      - "*"
+  workflow_dispatch:
+permissions: {}
 jobs:
-  release:
+  build:
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Archive app
         run: |
           xcodebuild \
@@ -30,14 +29,26 @@ jobs:
         run: |
           ditto -c -k --keepParent "dist/Disks.xcarchive/dSYMs" "Disks-dSYMs.zip"
       - name: Upload artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: release
           path: |
             Disks.app.zip
             Disks-dSYMs.zip
-      # - name: Publish release
-      #   env:
-      #     GH_TOKEN: ${{ github.token }}
-      #   run: |
-      #     gh release create "$GITHUB_REF_NAME" --generate-notes "Disks.app.zip" "Disks-dSYMs.zip"
+  publish:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref_type == "tag"
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: release
+          path: dist
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --generate-notes "dist/Disks.app.zip" "dist/Disks-dSYMs.zip"
