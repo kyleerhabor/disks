@@ -77,7 +77,9 @@ struct DisksView: View {
     do {
       try await self.disks.attach(diskImageAt: url)
     } catch {
-      Logger.ui.error("Could not attack disk image at URL '\(url.debugString)': \(error)")
+      Logger.ui.error("Could not attach disk image at URL '\(url.debugString)': \(error)")
+
+      return
     }
   }
 }

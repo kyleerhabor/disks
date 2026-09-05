@@ -5,4 +5,10 @@
 //  Created by Kyle Erhabor on 7/16/26.
 //
 
+// The idea behind these configuration files is that they resolve configuration across targets and configurations
+// (debug, release) so they can be referenced once in the project build settings, cascading across the two. This is the
+// reason we don't define settings like MARKETING_VERSION.
+
 DISKS_ORGANIZATION_ID = com.kyleerhabor
+DISKS_VERSION = 1.0.4
+DISKS_BUILD_NUMBER = 1
