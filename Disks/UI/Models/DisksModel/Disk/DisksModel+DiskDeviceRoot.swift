@@ -62,7 +62,19 @@ extension DiskDeviceRootEntryContentProcessOutput: Decodable {
 private struct DiskDeviceRootEntryProcessOutput {
   let content: DiskDeviceRootEntryContentProcessOutput
   let deviceIdentifier: String
-  let partitions: [DiskDeviceRootProcessEntryPartitionOutput]
+  // I don't think this should be non-optional, but for some reason, this entry exists:
+  //
+  //   <dict>
+  //     <key>Content</key>
+  //     <string></string>
+  //     <key>DeviceIdentifier</key>
+  //     <string>disk8</string>
+  //     <key>OSInternal</key>
+  //     <false/>
+  //     <key>Size</key>
+  //     <integer>67108864</integer>
+  //   </dict>
+  let partitions: [DiskDeviceRootProcessEntryPartitionOutput]?
   let apfsVolumes: [DiskDeviceRootProcessEntryAPFSVolumeProcessOutput]?
   let apfsPhysicalStores: [DiskDeviceRootProcessEntryAPFSPhysicalStoreOutput]?
 }
@@ -136,7 +148,7 @@ extension DisksModel {
 
       switch entry.content {
         case .guidPartitionScheme:
-          for partition in entry.partitions {
+          for partition in entry.partitions! {
             roots[partition.deviceIdentifier] = root
           }
         case .appleAPFSContainer:
@@ -149,7 +161,8 @@ extension DisksModel {
           }
         case .other:
           // This should make non-bare content types fail with not found.
-          guard entry.partitions.isEmpty else {
+          guard let partitions = entry.partitions,
+                partitions.isEmpty else {
             continue
           }
       }
