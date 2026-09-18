@@ -10,5 +10,5 @@
 // reason we don't define settings like MARKETING_VERSION.
 
 DISKS_ORGANIZATION_ID = com.kyleerhabor
-DISKS_VERSION = 1.0.4
-DISKS_BUILD_NUMBER = 1
+DISKS_VERSION = 1.0.5
+DISKS_BUILD_NUMBER = 2
