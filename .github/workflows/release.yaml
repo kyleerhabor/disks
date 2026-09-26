@@ -49,9 +49,6 @@ jobs:
 
           # Verify that the certificate was imported successfully
           security find-identity -v -p codesigning "$KEYCHAIN"
-      - name: Clean up keychain
-        if: ${{ !cancelled() }}
-        run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true
       - name: Archive app
         run: |
           xcodebuild \
@@ -62,6 +59,9 @@ jobs:
             -archivePath dist/Disks.xcarchive \
             CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Developer ID Application" ONLY_ACTIVE_ARCH=NO \
             archive
+      - name: Cleanup keychain
+        if: ${{ !cancelled() }}
+        run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true
       - name: Package archive
         run: |
           APP=dist/Disks.xcarchive/Products/Applications/Disks.app
