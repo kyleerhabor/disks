@@ -12,6 +12,46 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v7
+      - name: Import Developer ID certificate
+        env:
+          P12: ${{ secrets.DEVELOPER_ID_P12 }}
+          P12_PASSWORD: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN_PASSWORD=$(openssl rand -hex 24)
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+
+          # Decode base64-encoded P12 and write to a temporary file
+          echo "$P12" | openssl base64 -d -out "$RUNNER_TEMP/id.p12"
+
+          # Create a temporary keychain and import the certificate
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/id.p12" \
+            -k "$KEYCHAIN" \
+            -P "$P12_PASSWORD" \
+            -T /usr/bin/codesign \
+            -T /usr/bin/security
+
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s \
+            -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+
+          security list-keychains \
+            -d user \
+            -s "$KEYCHAIN" \
+            $(security list-keychains -d user | sed 's/["[:space:]]//g')
+
+          # Clean up temporary files
+          rm -f "$RUNNER_TEMP/id.p12"
+
+          # Verify that the certificate was imported successfully
+          security find-identity -v -p codesigning "$KEYCHAIN"
+      - name: Clean up keychain
+        if: ${{ !cancelled() }}
+        run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true
       - name: Archive app
         run: |
           xcodebuild \
@@ -20,15 +60,12 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=macOS' \
             -archivePath dist/Disks.xcarchive \
-            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="-" ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Developer ID Application" ONLY_ACTIVE_ARCH=NO \
             archive
-      - name: Package app
-        run: |
-          APP=dist/Disks.xcarchive/Products/Applications/Disks.app
-          codesign --force --deep --sign - "$APP"
-          ditto -c -k --keepParent "$APP" Disks.app.zip
       - name: Package archive
         run: |
+          APP=dist/Disks.xcarchive/Products/Applications/Disks.app
+          ditto -c -k --keepParent "$APP" Disks.app.zip
           ditto -c -k --keepParent dist/Disks.xcarchive Disks.xcarchive.zip
       - name: Upload artifacts
         uses: actions/upload-artifact@v7

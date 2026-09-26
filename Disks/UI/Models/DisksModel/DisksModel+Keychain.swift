@@ -60,6 +60,7 @@ extension DisksModel {
     service: String,
     account: String,
     password: String,
+//    authentication: LAContext,
   ) throws(DisksModelKeychainPasswordError) {
     let value = password.data(using: .utf8)!
     let addQuery: [CFString: Any] = [
@@ -75,6 +76,8 @@ extension DisksModel {
       kSecAttrService: service,
       kSecAttrAccount: account,
       kSecMatchLimit: kSecMatchLimitOne,
+//      kSecUseDataProtectionKeychain: true,
+//      kSecUseAuthenticationContext: authentication,
     ]
 
     let updateAttributes: [CFString: Any] = [kSecValueData: value]
