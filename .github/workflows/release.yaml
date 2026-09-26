@@ -22,7 +22,7 @@ jobs:
           KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
 
           # Decode base64-encoded P12 and write to a temporary file
-          echo "$P12" | openssl base64 -d -out "$RUNNER_TEMP/id.p12"
+          echo "$P12" | openssl base64 -d -A -out "$RUNNER_TEMP/id.p12"
 
           # Create a temporary keychain and import the certificate
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
