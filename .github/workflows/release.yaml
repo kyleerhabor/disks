@@ -57,7 +57,10 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=macOS' \
             -archivePath dist/Disks.xcarchive \
-            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Developer ID Application" ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            DEVELOPMENT_TEAM=UYJ357XWK6 \
+            ONLY_ACTIVE_ARCH=NO \
             archive
       - name: Cleanup keychain
         if: ${{ !cancelled() }}
