@@ -46,6 +46,25 @@ jobs:
             $(security list-keychains -d user | sed 's/["[:space:]]//g')
 
           rm -f "$RUNNER_TEMP/id.p12"
+      - name: Install provisioning profile
+        env:
+          DEVELOPER_ID_PROVISIONING_PROFILE: ${{ vars.DEVELOPER_ID_PROVISIONING_PROFILE }}
+        run: |
+          set -euo pipefail
+
+          PROVISIONING_PROFILES="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROVISIONING_PROFILES"
+          echo "$DEVELOPER_ID_PROVISIONING_PROFILE" | openssl base64 -d -A -out "$RUNNER_TEMP/profile.provisionprofile"
+
+          # The installed filename must be the profile's UUID for Xcode to discover it.
+          PLIST=$(security cms -D -i "$RUNNER_TEMP/profile.provisionprofile")
+          UUID=$(echo "$PLIST" | plutil -extract UUID raw -)
+          NAME=$(echo "$PLIST" | plutil -extract Name raw -)
+          cp "$RUNNER_TEMP/profile.provisionprofile" "$PROVISIONING_PROFILES/$UUID.provisionprofile"
+          rm -f "$RUNNER_TEMP/profile.provisionprofile"
+
+          # Manual signing selects the profile by name; hand it to the archive step.
+          echo "PROVISIONING_PROFILE_SPECIFIER=$NAME" >> "$GITHUB_ENV"
       - name: Archive app
         run: |
           xcodebuild \
@@ -57,6 +76,7 @@ jobs:
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Developer ID Application" \
             DEVELOPMENT_TEAM=UYJ357XWK6 \
+            PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_SPECIFIER" \
             ONLY_ACTIVE_ARCH=NO \
             archive
       - name: Cleanup keychain
