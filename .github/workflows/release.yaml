@@ -76,7 +76,6 @@ jobs:
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Developer ID Application" \
             DEVELOPMENT_TEAM=UYJ357XWK6 \
-            PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_SPECIFIER" \
             ONLY_ACTIVE_ARCH=NO \
             archive
       - name: Cleanup keychain
