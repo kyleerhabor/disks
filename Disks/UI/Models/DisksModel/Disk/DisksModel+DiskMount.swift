@@ -26,6 +26,7 @@ private struct DiskMounter: DisksModelMounter {
   let connection: DatabasePool
 
   // MARK: -
+  private let authentication: LAContext
   private let shouldClearKeychainPassword: Bool
 
   init(_ model: DisksModel, store: DisksModelDisk, disk: DisksDriveDiskModel, session: DASession, connection: DatabasePool) {
@@ -35,6 +36,7 @@ private struct DiskMounter: DisksModelMounter {
       disk: disk,
       session: session,
       connection: connection,
+      authentication: LAContext(),
       shouldClearKeychainPassword: false,
     )
   }
@@ -45,6 +47,7 @@ private struct DiskMounter: DisksModelMounter {
     disk: DisksDriveDiskModel,
     session: DASession,
     connection: DatabasePool,
+    authentication: LAContext,
     shouldClearKeychainPassword: Bool,
   ) {
     self.model = model
@@ -52,6 +55,7 @@ private struct DiskMounter: DisksModelMounter {
     self.disk = disk
     self.session = session
     self.connection = connection
+    self.authentication = authentication
     self.shouldClearKeychainPassword = shouldClearKeychainPassword
   }
 
@@ -104,10 +108,9 @@ private struct DiskMounter: DisksModelMounter {
       }
 
       let account = keychainAccount!
-      let authentication = LAContext()
 
       do {
-        try await authentication.evaluatePolicy(
+        try await self.authentication.evaluatePolicy(
           .deviceOwnerAuthentication,
           localizedReason: "unlock the drive “\(self.disk.name)”",
         )
@@ -121,7 +124,7 @@ private struct DiskMounter: DisksModelMounter {
         password = try DisksModel.loadKeychainPassword(
           service: DisksModel.diskPasswordKeychainService,
           account: account,
-          authentication: authentication,
+          authentication: self.authentication,
         )
       } catch let error {
         switch error.reason {
@@ -139,6 +142,7 @@ private struct DiskMounter: DisksModelMounter {
           disk: self.disk,
           session: self.session,
           connection: self.connection,
+          authentication: self.authentication,
           shouldClearKeychainPassword: true,
         )
 
@@ -229,6 +233,7 @@ private struct DiskMounter: DisksModelMounter {
         service: DisksModel.diskPasswordKeychainService,
         account: account,
         password: password,
+        authentication: self.authentication,
       )
     } catch {
       throw DisksModelMountDiskError(

@@ -46,9 +46,6 @@ jobs:
             $(security list-keychains -d user | sed 's/["[:space:]]//g')
 
           rm -f "$RUNNER_TEMP/id.p12"
-
-          # Verify that the certificate was imported successfully
-          security find-identity -v -p codesigning "$KEYCHAIN"
       - name: Archive app
         run: |
           xcodebuild \
@@ -90,6 +87,8 @@ jobs:
           APP=dist/Disks.xcarchive/Products/Applications/Disks.app
           xcrun stapler staple "$APP"
           xcrun stapler validate "$APP"
+      # There's no ditto on Linux, so we need to package both the archive and app, even though the archive contains the
+      # app.
       - name: Package archive
         run: |
           APP=dist/Disks.xcarchive/Products/Applications/Disks.app

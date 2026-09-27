@@ -12,8 +12,13 @@ struct DisksModelKeychainPasswordDatabaseError {
   let status: OSStatus
 }
 
+struct DisksModelKeychainPasswordAccessControlError {
+  let underlyingError: CFError
+}
+
 enum DisksModelKeychainPasswordErrorReason {
   case database(DisksModelKeychainPasswordDatabaseError),
+       accessControl(DisksModelKeychainPasswordAccessControlError),
        badOutput
 }
 
@@ -38,6 +43,7 @@ extension DisksModel {
       kSecAttrAccount: account,
       kSecReturnData: true,
       kSecUseAuthenticationContext: authentication,
+      kSecUseDataProtectionKeychain: true,
     ]
 
     var result: CFTypeRef!
@@ -60,15 +66,31 @@ extension DisksModel {
     service: String,
     account: String,
     password: String,
-//    authentication: LAContext,
+    authentication: LAContext,
   ) throws(DisksModelKeychainPasswordError) {
+    var error: Unmanaged<CFError>?
+
+    guard let accessControl = SecAccessControlCreateWithFlags(
+      nil,
+      kSecAttrAccessibleWhenUnlocked,
+      .userPresence,
+      &error,
+    ) else {
+      throw DisksModelKeychainPasswordError(
+        reason: .accessControl(
+          DisksModelKeychainPasswordAccessControlError(underlyingError: error!.takeRetainedValue()),
+        ),
+      )
+    }
+
     let value = password.data(using: .utf8)!
     let addQuery: [CFString: Any] = [
       kSecClass: kSecClassGenericPassword,
       kSecAttrService: service,
       kSecAttrAccount: account,
-      kSecAttrAccessible: kSecAttrAccessibleWhenUnlocked,
+      kSecAttrAccessControl: accessControl,
       kSecValueData: value,
+      kSecUseDataProtectionKeychain: true,
     ]
 
     let updateQuery: [CFString: Any] = [
@@ -76,8 +98,8 @@ extension DisksModel {
       kSecAttrService: service,
       kSecAttrAccount: account,
       kSecMatchLimit: kSecMatchLimitOne,
-//      kSecUseDataProtectionKeychain: true,
-//      kSecUseAuthenticationContext: authentication,
+      kSecUseDataProtectionKeychain: true,
+      kSecUseAuthenticationContext: authentication,
     ]
 
     let updateAttributes: [CFString: Any] = [kSecValueData: value]

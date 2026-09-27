@@ -206,6 +206,7 @@ private struct DriveMounter: DisksModelMounter {
         service: DisksModel.diskPasswordKeychainService,
         account: account,
         password: password,
+        authentication: self.authentication,
       )
     } catch {
       throw DisksModelMountDriveError(

@@ -25,10 +25,19 @@ private struct DiskImageMounter: DisksModelMounter {
   // MARK: -
   private let name: String?
   private let encryption: EncryptionProcessOutput?
+  private let authentication: LAContext
   private let shouldClearKeychainPassword: Bool
 
   init(_ model: DisksModel, url: URL, connection: DatabasePool) {
-    self.init(model, url: url, connection: connection, name: nil, encryption: nil, shouldClearKeychainPassword: false)
+    self.init(
+      model,
+      url: url,
+      connection: connection,
+      name: nil,
+      encryption: nil,
+      authentication: LAContext(),
+      shouldClearKeychainPassword: false
+    )
   }
 
   private init(
@@ -37,6 +46,7 @@ private struct DiskImageMounter: DisksModelMounter {
     connection: DatabasePool,
     name: String?,
     encryption: EncryptionProcessOutput?,
+    authentication: LAContext,
     shouldClearKeychainPassword: Bool,
   ) {
     self.model = model
@@ -44,6 +54,7 @@ private struct DiskImageMounter: DisksModelMounter {
     self.connection = connection
     self.name = name
     self.encryption = encryption
+    self.authentication = authentication
     self.shouldClearKeychainPassword = shouldClearKeychainPassword
   }
 
@@ -131,6 +142,7 @@ private struct DiskImageMounter: DisksModelMounter {
           connection: self.connection,
           name: name,
           encryption: encryption,
+          authentication: self.authentication,
           shouldClearKeychainPassword: false,
         )
 
@@ -139,10 +151,11 @@ private struct DiskImageMounter: DisksModelMounter {
         return
       }
 
-      let context = LAContext()
-
       do {
-        try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "unlock the disk image “\(name)”")
+        try await self.authentication.evaluatePolicy(
+          .deviceOwnerAuthentication,
+          localizedReason: "unlock the disk image “\(name)”",
+        )
       } catch {
         throw DisksModelAttachDiskImageError(reason: .authentication(error))
       }
@@ -154,7 +167,7 @@ private struct DiskImageMounter: DisksModelMounter {
         password = try DisksModel.loadKeychainPassword(
           service: DisksModel.diskImagePasswordKeychainService,
           account: account,
-          authentication: context,
+          authentication: self.authentication,
         )
       } catch {
         switch error.reason {
@@ -172,6 +185,7 @@ private struct DiskImageMounter: DisksModelMounter {
           connection: self.connection,
           name: name,
           encryption: encryption,
+          authentication: self.authentication,
           shouldClearKeychainPassword: true,
         )
 
@@ -192,6 +206,7 @@ private struct DiskImageMounter: DisksModelMounter {
           connection: self.connection,
           name: name,
           encryption: encryption,
+          authentication: self.authentication,
           shouldClearKeychainPassword: false,
         )
 
@@ -253,6 +268,7 @@ private struct DiskImageMounter: DisksModelMounter {
         service: DisksModel.diskImagePasswordKeychainService,
         account: account,
         password: password,
+        authentication: self.authentication,
       )
     } catch {
       throw DisksModelAttachDiskImageError(
