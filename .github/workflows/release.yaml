@@ -59,12 +59,8 @@ jobs:
           # The installed filename must be the profile's UUID for Xcode to discover it.
           PLIST=$(security cms -D -i "$RUNNER_TEMP/profile.provisionprofile")
           UUID=$(echo "$PLIST" | plutil -extract UUID raw -)
-          NAME=$(echo "$PLIST" | plutil -extract Name raw -)
           cp "$RUNNER_TEMP/profile.provisionprofile" "$PROVISIONING_PROFILES/$UUID.provisionprofile"
           rm -f "$RUNNER_TEMP/profile.provisionprofile"
-
-          # Manual signing selects the profile by name; hand it to the archive step.
-          echo "PROVISIONING_PROFILE_SPECIFIER=$NAME" >> "$GITHUB_ENV"
       - name: Archive app
         run: |
           xcodebuild \
