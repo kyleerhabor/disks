@@ -26,6 +26,6 @@ Enter Disks, a menu bar app for unlocking your drives with Touch ID.
 
 ## Download
 
-You can download the app from the [Releases](https://github.com/kyleerhabor/disks/releases) page.
+You can download the app from [Releases](https://github.com/kyleerhabor/disks/releases).
 
 macOS Sequoia 15 or later is required.
