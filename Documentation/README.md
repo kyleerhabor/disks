@@ -8,10 +8,7 @@ git clone https://github.com/kyleerhabor/disks.git Disks
 
 ## Signing
 
-Disks expects release builds to be signed with a [Developer ID certificate](https://developer.apple.com/help/account/certificates/create-developer-id-certificates).
-While you can sign with a free account, the provisioning profile will expire after a week, causing the app to fail to
-launch. Because the app manages passwords, it's not recommended to circumvent this by, say, using an Apple Development
-certificate.
+Disks expects release builds to be signed with a [Developer ID certificate](https://developer.apple.com/help/account/certificates/create-developer-id-certificates). While you can sign with a free account, the provisioning profile will expire after a week, causing the app to fail to launch. Because the app manages passwords, it's not recommended to circumvent this by, say, using an ad-hoc signature.
 
 ## CI/CD
 

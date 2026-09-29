@@ -20,15 +20,16 @@ jobs:
           set -euo pipefail
           KEYCHAIN_PASSWORD=$(openssl rand -hex 24)
           KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          CERTIFICATE="$RUNNER_TEMP/id.p12"
 
           # Decode base64-encoded P12 and write to a temporary file
-          echo "$DEVELOPER_ID_P12" | openssl base64 -d -A -out "$RUNNER_TEMP/id.p12"
+          echo "$DEVELOPER_ID_P12" | openssl base64 -d -A -out "$CERTIFICATE"
 
           # Create a temporary keychain and import the certificate
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
           security set-keychain-settings -lut 21600 "$KEYCHAIN"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
-          security import "$RUNNER_TEMP/id.p12" \
+          security import "$CERTIFICATE" \
             -k "$KEYCHAIN" \
             -P "$DEVELOPER_ID_P12_PASSWORD" \
             -T /usr/bin/codesign \
@@ -45,7 +46,7 @@ jobs:
             -s "$KEYCHAIN" \
             $(security list-keychains -d user | sed 's/["[:space:]]//g')
 
-          rm -f "$RUNNER_TEMP/id.p12"
+          rm -f "$CERTIFICATE"
       - name: Install provisioning profile
         env:
           DEVELOPER_ID_PROVISIONING_PROFILE: ${{ vars.DEVELOPER_ID_PROVISIONING_PROFILE }}
@@ -53,12 +54,12 @@ jobs:
           set -euo pipefail
 
           PROVISIONING_PROFILES="$HOME/Library/MobileDevice/Provisioning Profiles"
+          PROFILE="$RUNNER_TEMP/profile.provisionprofile"
           mkdir -p "$PROVISIONING_PROFILES"
           echo "$DEVELOPER_ID_PROVISIONING_PROFILE" | openssl base64 -d -A -out "$RUNNER_TEMP/profile.provisionprofile"
 
           # The installed filename must be the profile's UUID for Xcode to discover it.
-          PLIST=$(security cms -D -i "$RUNNER_TEMP/profile.provisionprofile")
-          UUID=$(echo "$PLIST" | plutil -extract UUID raw -)
+          UUID=$(security cms -D -i "$RUNNER_TEMP/profile.provisionprofile" | plutil -extract UUID raw -)
           cp "$RUNNER_TEMP/profile.provisionprofile" "$PROVISIONING_PROFILES/$UUID.provisionprofile"
           rm -f "$RUNNER_TEMP/profile.provisionprofile"
       - name: Archive app
@@ -69,7 +70,6 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=macOS' \
             -archivePath dist/Disks.xcarchive \
-            DEVELOPMENT_TEAM=UYJ357XWK6 \
             ONLY_ACTIVE_ARCH=NO \
             archive
       - name: Cleanup keychain
