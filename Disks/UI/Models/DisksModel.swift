@@ -759,7 +759,11 @@ final class DisksModel {
         return
       }
 
-      source = .disk(DisksModelDiskDiskSource(serial: item.deviceSerial!))
+      guard let serial = item.deviceSerial else {
+        return
+      }
+
+      source = .disk(DisksModelDiskDiskSource(serial: serial))
     }
 
     await self.addDisk(device: device, rootDevice: rootDevice, source: source, item: item)
