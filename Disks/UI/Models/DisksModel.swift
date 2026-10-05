@@ -746,7 +746,10 @@ final class DisksModel {
       return
     }
 
-    let item = self.item(disk: disk)
+    guard let item = self.item(disk: disk) else {
+      return
+    }
+
     let source: DisksModelDiskSource
 
     do {
@@ -774,15 +777,20 @@ final class DisksModel {
   }
 
   nonisolated private func handleDescriptionChange(device: String, session: DASession) async {
-    guard let disk = DADiskCreateFromBSDName(nil, session, device) else {
+    guard let disk = DADiskCreateFromBSDName(nil, session, device),
+          let item = self.item(disk: disk) else {
       return
     }
 
-    await self.updateDisk(device: device, disk: self.item(disk: disk))
+    await self.updateDisk(device: device, disk: item)
   }
 
-  nonisolated private func item(disk: DADisk) -> DisksModelItem {
-    let description = DADiskCopyDescription(disk) as! [AnyHashable: Any]
+  nonisolated private func item(disk: DADisk) -> DisksModelItem? {
+    guard let copiedDescription = DADiskCopyDescription(disk) else {
+      return nil
+    }
+
+    let description = copiedDescription as! [AnyHashable: Any]
     let isDeviceInternal: Bool?
 
     if let isInternal = description[kDADiskDescriptionDeviceInternalKey] {
