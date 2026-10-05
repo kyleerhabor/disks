@@ -29,3 +29,22 @@ Enter Disks, a menu bar app for unlocking your drives with Touch ID.
 You can download the app from [Releases](https://github.com/kyleerhabor/disks/releases).
 
 macOS Sequoia 15 or later is required.
+
+### Nix
+
+You can add the flake as an input to your flake:
+
+```nix
+inputs.disks.url = "github:kyleerhabor/disks";
+inputs.disks.inputs.nixpkgs.follows = "nixpkgs";
+```
+
+For [nix-darwin](https://github.com/nix-darwin/nix-darwin) configurations, include the package:
+
+```nix
+environment.systemPackages = [
+  inputs.disks.packages.${pkgs.stdenv.hostPlatform.system}.default
+];
+```
+
+`darwin-rebuild switch` installs the app to `/Applications/Nix Apps`.

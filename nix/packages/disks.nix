@@ -1,4 +1,4 @@
-{ lib, fetchzip, stdenvNoCC }: stdenvNoCC.mkDerivation (finalAttrs: {
+{ fetchzip, lib, stdenvNoCC }: stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "disks";
   version = "1.0.7";
   src = fetchzip {
@@ -10,8 +10,6 @@
     mkdir -p $out/Applications
     cp -R $src/Disks.app $out/Applications/
   '';
-  meta = {
-    platforms = lib.platforms.darwin;
-    sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
-  };
+  meta.platforms = lib.platforms.darwin;
+  meta.sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
 })
