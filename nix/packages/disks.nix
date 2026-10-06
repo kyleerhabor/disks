@@ -7,8 +7,10 @@
     stripRoot = false;
   };
   installPhase = ''
+    runHook preInstall
     mkdir -p $out/Applications
     cp -R $src/Disks.app $out/Applications/
+    runHook postInstall
   '';
   meta.platforms = lib.platforms.darwin;
   meta.sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
