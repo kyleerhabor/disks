@@ -148,7 +148,11 @@ extension DisksModel {
 
       switch entry.content {
         case .guidPartitionScheme:
-          for partition in entry.partitions! {
+          guard let partitions = entry.partitions else {
+            continue
+          }
+
+          for partition in partitions {
             roots[partition.deviceIdentifier] = root
           }
         case .appleAPFSContainer:
