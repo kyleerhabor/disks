@@ -1,9 +1,9 @@
 { fetchzip, lib, stdenvNoCC }: stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "disks";
-  version = "1.0.7";
+  version = "1.0.8";
   src = fetchzip {
     url = "https://github.com/kyleerhabor/disks/releases/download/v${finalAttrs.version}/Disks.app.zip";
-    hash = "sha256-kN75v5SaQ19qT/7okIQ/RI1MRFCYlgMOp6HtLJThTpI=";
+    hash = "sha256-DKSYaKrLS2txnEnxSvb/+t7uavhoPH8hmixEb6svfSY=";
     stripRoot = false;
   };
   installPhase = ''
