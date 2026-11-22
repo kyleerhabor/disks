@@ -537,7 +537,7 @@ final class DisksModel {
 
         let name = diskImage.name
         let drive = self.diskImageDrives.first(where: { $0.device == rootDisk.device })
-        ?? DisksDriveModel(device: rootDisk.device, source: .diskImage, name: name, isMounted: false, disks: [])
+          ?? DisksDriveModel(device: rootDisk.device, source: .diskImage, name: name, isMounted: false, disks: [])
 
         let items = disks
           .compactMap { self.set(item: $0, disks: drive.disks) }
