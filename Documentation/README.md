@@ -30,3 +30,9 @@ openssl base64 -A -in [...] | pbcopy
 ```
 
 See [App Store Connect API](https://appstoreconnect.apple.com/access/integrations/api) and [Certificates, Identifiers & Profiles](https://developer.apple.com/account/resources/certificates/list).
+
+## Releasing
+
+To release a new version of the app, update the version and build number in `Configuration/DisksCore.xcconfig`, commit the changes, tag that commit, and push the tag to GitHub.
+
+To release a new version of the Nix package, update `nix/packages/disks.nix` with the new version and a fake hash (`lib.fakeHash`), run `nix build` to get the real hash, update the file with that hash, and then commit and push the changes.
